@@ -1,4 +1,7 @@
 #!/usr/bin/python
+# This script reads the content of a Google Calendar 
+# and gives meeting alerts by reading them via text-to-speech
+#
 from __future__ import print_function
 import datetime
 import pickle
