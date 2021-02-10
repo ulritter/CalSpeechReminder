@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#
 # This script reads the content of a Google Calendar 
 # and gives meeting alerts by reading them via text-to-speech
 # 
@@ -9,6 +10,7 @@
 from __future__ import print_function
 import datetime
 import pickle
+import os
 import os.path
 import urllib3
 import time
@@ -16,8 +18,12 @@ from datetime import date
 from gtts import gTTS
 from pydub import AudioSegment
 from pydub.playback import play
+from pydub.utils import get_player_name
+import tempfile
+import subprocess
 import dateutil
 import dateutil.parser
+from twilio.rest import Client 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -64,24 +70,45 @@ def get_events(number_events):
     
     return (events)
 
-
+#rhp-custom function to supress output while playing mp3 files
+def _play_with_ffplay_suppress(seg):
+	PLAYER = get_player_name()
+	with tempfile.NamedTemporaryFile("w+b", suffix=".mp3") as f:
+		seg.export(f.name, "mp3")
+		devnull = open(os.devnull, 'w')
+		subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull)
+        
+        
+# text-to-speech output of a given character strimg
 def speak(speak_text,speak_lang):
-	# text-to-speech  the strimg
 	tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
 	tts.save("speech.mp3")
 	music = AudioSegment.from_mp3('./gong.mp3')
-	play(music)
+	_play_with_ffplay_suppress(music)
 	music = AudioSegment.from_mp3('./speech.mp3')
-	play(music)
+	_play_with_ffplay_suppress(music)
 
 
 def main():
+	account_sid = 'AC9de23b6265869e997a2e1be8ac1aca2f' 
+	auth_token = '[AuthToken]' 
+	client = Client(account_sid, auth_token) 
+	message = client.messages.create( 
+                              from_='whatsapp:+14155238886',  
+                              body='Your appointment is coming up on July 21 at 3PM',      
+                              to='whatsapp:+491608083432' 
+                          ) 
+	print(message.sid)
+  
 	monitor = True
 	camera_present = True
-	
+
 	# disable warnings we might get from text to speech module
 	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 	# set language and text snippets for text to speech
+	
+	speak('Das programm startet','de')
+	
 	language = 'de'
 	str_begins = 'beginnt in'
 	str_minutes = 'Minuten'
@@ -125,10 +152,14 @@ def main():
 				print(summary, ' ', str_begins,' ', timeDiff,str_minutes)
 
 			# alert via sound output 
-			if (timeDiff > 1) and (timeDiff == 5):
+			if timeDiff == 5:
 				speak(summary + str_begins + str(timeDiff) + str_minutes,language)
-			elif (timeDiff <= 1) and (timeDiff > 0):
+			elif timeDiff == 1:
 				speak(summary + str_begins + str_one_minute,language)
+			#if (timeDiff > 1) and (timeDiff == 5):
+			#	speak(summary + str_begins + str(timeDiff) + str_minutes,language)
+			#elif (timeDiff <= 1) and (timeDiff > 0):
+			#	speak(summary + str_begins + str_one_minute,language)
 
 		# take a snapshot if camera present
 		if camera_present:
