@@ -1,12 +1,21 @@
 #!/usr/bin/python
-#
+#==========================================================
 # This script reads the content of a Google Calendar 
-# and gives meeting alerts by reading them via text-to-speech
-# 
-# This was originally built to run on a Raspberry Pi using Python 2.7
-# but may equally be able to run on any other system with the necessary
-# adaptions like the operating system commands etc.
+# and gives meeting alerts by reading them via 
+# text-to-speech (tts)
 #
+# used this to remind my son of upcoming home schooling 
+# video events, hence also the camera code :-)
+# 
+# This was originally built to run on a Raspberry Pi using 
+# Python 2.7 but may equally be able to run on any other 
+# system with the necessary adaptions like the operating 
+# system commands etc.
+#
+# Program exit via console ^C in this version
+#
+# (c) ulritter, 2021, GPL License 3.0
+#==========================================================
 from __future__ import print_function
 import datetime
 import pickle
@@ -23,13 +32,51 @@ import tempfile
 import subprocess
 import dateutil
 import dateutil.parser
-from twilio.rest import Client 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+#
+#==========================================================
+#========= begin customization section ====================
+#==========================================================
+#
+status_output = True
+language = 'de'
+# operation system command to clear screen
+str_clear = 'clear'
+# strings for tts and console output
+str_begins = 'beginnt in'
+str_minutes = 'Minuten'
+str_one_minute = 'einer Minute'
+str_no_event = 'Keine bevorstehende Ereignisse gefunden'
+str_reloaded = 'Ereignisse neu geladen um'
+str_iteration = 'Iteration:'
+str_divider = '==================================================================='
+# StarTrek Transporter sound on startup - just for fun
+str_initial_sound_file = './transporter.mp3'
+# theater gong :-)
+str_alert_sound_file = './gong.mp3'
+# temp file for generated tts sound
+str_tts_sound_file = './speech.mp3'
+camera_present = True
+str_take_picture = 'fswebcam -r 1280x720 image2.jpg >/dev/null 2>&1'
+# countdown minutes
+first_gong_time = 5
+second_gong_time = 1
+# get next n google calendar events beginning from now
+# could also be less since we re-read the calender in a
+# rolling process
+number_events = 10
+# refresh timer
+refresh_timer = 10
+#
+#==========================================================
+#========= end customization section ======================
+#==========================================================
+#
 
 
 def get_events(number_events):
@@ -80,46 +127,37 @@ def _play_with_ffplay_suppress(seg):
         
         
 # text-to-speech output of a given character strimg
-def speak(speak_text,speak_lang):
+def speak(speak_text,speak_lang,gong):
 	tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
-	tts.save("speech.mp3")
-	music = AudioSegment.from_mp3('./gong.mp3')
-	_play_with_ffplay_suppress(music)
-	music = AudioSegment.from_mp3('./speech.mp3')
+	tts.save(str_tts_sound_file)
+	if gong:
+		music = AudioSegment.from_mp3(str_alert_sound_file)
+		_play_with_ffplay_suppress(music)
+	music = AudioSegment.from_mp3(str_tts_sound_file)
 	_play_with_ffplay_suppress(music)
 
+def clearscreen():
+	os.system(str_clear)
 
 def main():
-	account_sid = 'AC9de23b6265869e997a2e1be8ac1aca2f' 
-	auth_token = '[AuthToken]' 
-	client = Client(account_sid, auth_token) 
-	message = client.messages.create( 
-                              from_='whatsapp:+14155238886',  
-                              body='Your appointment is coming up on July 21 at 3PM',      
-                              to='whatsapp:+491608083432' 
-                          ) 
-	print(message.sid)
-  
-	monitor = True
-	camera_present = True
 
 	# disable warnings we might get from text to speech module
 	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 	# set language and text snippets for text to speech
-	
-	speak('Das programm startet','de')
-	
-	language = 'de'
-	str_begins = 'beginnt in'
-	str_minutes = 'Minuten'
-	str_one_minute = 'einer Minute'
-	# get next n google calendar events beginning from now 
-	n = 20
-	events = get_events(n)
+	#
+	if status_output:
+		clearscreen()
+		music = AudioSegment.from_mp3(str_initial_sound_file)
+		_play_with_ffplay_suppress(music)
+
+	#
+	events = get_events(number_events)
 	#reset counter 
 	counter = 0
-	# refresh timer
-	refresh_timer = 10
+
+	#
+	#
+	#
 	last = dateutil.parser.parse(datetime.datetime.now().isoformat())
     
   #endless loop, waiting for keyboard interrupt or empty calendar
@@ -127,16 +165,21 @@ def main():
     # we need to be able to subtract the time stamps, hence we need to force both to the same format	
 		now = dateutil.parser.parse(datetime.datetime.now().isoformat())
 		
-		if not events:
-			print('No upcoming events found.')
+		if not events and status_output:
+			clearscreen()
+			print(str_no_event)
 			break
 			
-		if monitor:
-				os.system('clear')
-				print('====================================================')
+		if status_output:
+				clearscreen()
+				print(str_divider)
+		#
 		# go through our event list
+		# it is somewhat redundant to scan the entire list if the parameters "number_events" and "refresh_timer"
+		# create a too wide angle, but it leaves more control via parameters this way and the code is simpler
+		#
 		for event in events:
-			# get the event's start time
+			# get the event start time
 			start = event['start'].get('dateTime')
 			
 			# get event description
@@ -148,33 +191,29 @@ def main():
 			# time differnce between now and event in minutes
 			timeDiff=int(((dtu-now).total_seconds())/60)
 			
-			if monitor:
+			if status_output:
 				print(summary, ' ', str_begins,' ', timeDiff,str_minutes)
 
-			# alert via sound output 
-			if timeDiff == 5:
-				speak(summary + str_begins + str(timeDiff) + str_minutes,language)
-			elif timeDiff == 1:
-				speak(summary + str_begins + str_one_minute,language)
-			#if (timeDiff > 1) and (timeDiff == 5):
-			#	speak(summary + str_begins + str(timeDiff) + str_minutes,language)
-			#elif (timeDiff <= 1) and (timeDiff > 0):
-			#	speak(summary + str_begins + str_one_minute,language)
+			# alert via sound & text-to-speech 
+			if timeDiff == first_gong_time:
+				speak(summary + str_begins + str(timeDiff) + str_minutes,language, True)
+			elif timeDiff == second_gong_time:
+				speak(summary + str_begins + str_one_minute,language, True)
 
 		# take a snapshot if camera present
 		if camera_present:
-			os.system ('fswebcam -r 1280x720 image2.jpg >/dev/null 2>&1')
+			os.system (str_take_picture)
 			
-		# reload calendar every refresh_timer  minutes  
+		# reload calendar every refresh_timer minutes  
 		counter = counter + 1  	
 		if counter > (refresh_timer - 1):
-			events = get_events(n)
+			events = get_events(number_events)
 			counter = 0
 			last = now  	
 				
-		if monitor:
-				print('====================================================')
-				print('Iteration: ',counter,', Events reloaded at', last)
+		if status_output:
+				print(str_divider)
+				print(str_iteration,' ',counter,' ',str_reloaded,' ', last)
 				
 		time.sleep(60)
 	 
