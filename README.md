@@ -17,7 +17,6 @@ pip install pydub
 
 pip install datetime
 
-sudo apt-get install fswebcam
 
 
 
