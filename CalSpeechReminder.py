@@ -108,13 +108,12 @@ def get_events(number_events):
 
     # Call the Calendar API
     startlooking = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    # startlooking = datetime.datetime.now()
+
     print('Getting the upcoming ',number_events,' events')
     events_result = service.events().list(calendarId='primary', timeMin=startlooking,
                                         maxResults=number_events, singleEvents=True,
                                         orderBy='startTime').execute()
     events = events_result.get('items', [])
-    
     return (events)
 
 #rhp-custom function to supress output while playing mp3 files
@@ -140,7 +139,6 @@ def clearscreen():
 	os.system(str_clear)
 
 def main():
-
 	# disable warnings we might get from text to speech module
 	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 	# set language and text snippets for text to speech
@@ -212,8 +210,8 @@ def main():
 			last = now  	
 				
 		if status_output:
-				print(str_divider)
-				print(str_iteration,' ',counter,' ',str_reloaded,' ', last)
+			print(str_divider)
+			print(str_iteration,' ',counter,' ',str_reloaded,' ', last)
 				
 		time.sleep(60)
 	 
