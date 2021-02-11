@@ -61,8 +61,6 @@ str_initial_sound_file = './transporter.mp3'
 str_alert_sound_file = './gong.mp3'
 # temp file for generated tts sound
 str_tts_sound_file = './speech.mp3'
-camera_present = True
-str_take_picture = 'fswebcam -r 1280x720 image2.jpg >/dev/null 2>&1'
 # countdown minutes
 first_gong_time = 5
 second_gong_time = 1
@@ -197,10 +195,6 @@ def main():
 				speak(summary + str_begins + str(timeDiff) + str_minutes,language, True)
 			elif timeDiff == second_gong_time:
 				speak(summary + str_begins + str_one_minute,language, True)
-
-		# take a snapshot if camera present
-		if camera_present:
-			os.system (str_take_picture)
 			
 		# reload calendar every refresh_timer minutes  
 		counter = counter + 1  	
