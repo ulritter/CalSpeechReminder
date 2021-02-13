@@ -14,6 +14,9 @@
 #
 # (c) ulritter, 2021, GPL License 3.0
 #==========================================================
+#
+# todo: sound subdirectory, better screen output, run as a daemon
+#
 from __future__ import print_function
 import datetime
 import pickle
@@ -68,6 +71,7 @@ def LoadDefaultLanguage():
 def LoadDefaults():
 	global status_output
 	global str_clear
+	global alert_sound
 	global str_divider
 	global str_initial_sound_file
 	global str_alert_sound_file
@@ -95,7 +99,9 @@ def LoadDefaults():
 	# rolling process
 	number_events = 10
 	# refresh time
-	refresh_timer = 10	
+	refresh_timer = 10
+	# decides whether we play a sound (loke gong etc.) before we speak the string
+	alert_sound = True	
 
 class LangNotFound(Exception):
 	pass
@@ -109,6 +115,12 @@ try:
 				status_output = True
 			else:
 				status_output = False
+				
+			if prefs['str_alert_sound'] == 'on':
+				alert_sound = True
+			else:
+				alert_sound = False
+				
 			language = prefs['language']
 			str_clear = prefs['str_clear']
 			str_divider = prefs['str_divider']
@@ -133,15 +145,21 @@ try:
 					str_iteration = locale['str_iteration']
 					str_upcoming = locale['str_upcoming']
 					str_events = locale['str_events']
+					
+			# if the prefs.json "language" entry is not matched by any of the translations
+			# raise an exception
 			if not language_found:
 				raise LangNotFound()
-		except ValueError as e:
+				
+		# fill defaults in case of any json parsing issue (delimiter missing, etc)			
+		except ValueError:
 			LoadDefaults()
-# let's fill defaults in case we have not match for language in the prefs file			
+			
+# fill default language entries in case we have no match for language in the prefs file			
 except LangNotFound:
 	LoadDefaultLanguage() 
 	
-# let's fill defaults in case we have probelems reaading the prefs file	
+# fill defaults in case we have probelems reaading the prefs file	
 except EnvironmentError: 
 	LoadDefaults()
 	
@@ -204,10 +222,10 @@ def _play_with_ffplay_suppress(seg):
 		subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull)   
         
 # text-to-speech output of a given character strimg
-def speak(speak_text,speak_lang,gong):
+def speak(speak_text,speak_lang,alert_sound):
 	tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
 	tts.save(str_tts_sound_file)
-	if gong:
+	if alert_sound:
 		music = AudioSegment.from_mp3(str_alert_sound_file)
 		_play_with_ffplay_suppress(music)
 	music = AudioSegment.from_mp3(str_tts_sound_file)
@@ -229,8 +247,6 @@ def main():
 	#reset counter 
 	counter = 0
 
-	#
-	#
 	#
 	last = dateutil.parser.parse(datetime.datetime.now().isoformat())
     
@@ -271,7 +287,7 @@ def main():
 			# if we have hit one of the alert times alert via sound & text-to-speech 
 			for alert_time in alerts:
 				if timeDiff == alert_time:
-					speak(summary + str_begins + str(timeDiff) + str_minutes,language, True)
+					speak(summary + str_begins + str(timeDiff) + str_minutes,language, alert_sound)
 
 		# reload calendar every refresh_timer minutes  
 		counter = counter + 1  	

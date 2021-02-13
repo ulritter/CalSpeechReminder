@@ -5,11 +5,13 @@ adaptions like the operating system commands etc.
 
 The scripts reads a json file to load preferences. The explanation of these preferences are here:
 
-	"str_clear": command for os.system() to clear scren, e.g. 'clear' in Linux or 'cls' imn Windows
+	"status_output": if "on" the script turns verbose displaying console messages
+	"str_clear": command for os.system() to clear the screen, e.g. 'clear' in Linux or 'cls' in Windows
 	"str_divider": line in ascii to have a visual speration of data
 	"str_initial_sound_file": sound file played on startup
-	"str_alert_sound_file": sound file played on alert
-	"str_tts_sound_file": "temp soundfile fot text-to-speech
+	"str_alert_sound": if "on" the sound in the "str_alert_sound_file" below is played before the calender text-to-speech output
+	"str_alert_sound_file": sound file played on alert if "str_alert_sound" above in "on"
+	"str_tts_sound_file": "temp soundfile where the text-to-speech conversion result is stored
 	"number_events": number of calendar entries to be read head 
 	"refresh_timer": how often (minutes) 
 	"alerts": list of "alert_time" values to trigger the output of alert reminder messages

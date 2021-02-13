@@ -2,8 +2,9 @@
 	"status_output": "on",
 	"str_clear": "clear",
 	"str_divider" : "===================================================================",
-	"str_initial_sound_file": "./transporter.mp3",
-	"str_alert_sound_file": "./gong.mp3",
+	"str_initial_sound_file": "./jarvis_alerts.mp3",
+	"str_alert_sound": "on",
+  "str_alert_sound_file": "./gong.mp3",
 	"str_tts_sound_file": "./speech.mp3",
 	"alerts": [
 		{"alert_time": "10"},
