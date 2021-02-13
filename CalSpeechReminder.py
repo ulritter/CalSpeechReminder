@@ -201,8 +201,7 @@ def _play_with_ffplay_suppress(seg):
 	with tempfile.NamedTemporaryFile("w+b", suffix=".mp3") as f:
 		seg.export(f.name, "mp3")
 		devnull = open(os.devnull, 'w')
-		subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull)
-        
+		subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull)   
         
 # text-to-speech output of a given character strimg
 def speak(speak_text,speak_lang,gong):

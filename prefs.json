@@ -12,7 +12,9 @@
 	],
 	"number_events": "10",
 	"refresh_timer": "10",
+	
 	"language": "de",
+	
 	"locales": [
   	{
     	"lang": "de",
@@ -33,7 +35,7 @@
     	"str_no_event": "No upcoming events found",
     	"str_reloaded": "Events reloaded at",
     	"str_iteration": "Iteration:",
-    	 "str_upcoming": "Getting the next ",
+    	"str_upcoming": "Getting the next ",
     	"str_events": " events ..."
   	}
 	]
