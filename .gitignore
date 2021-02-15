@@ -1,3 +1,4 @@
 *.jpg
 *.pickle
 speech.mp3
+credentials.json

@@ -19,23 +19,29 @@
 	"locales": [
   	{
     	"lang": "de",
+    	"str_lookahead": "Maximale Anzahl der Ereignisse in der Vorschau: ",
     	"str_begins": "beginnt in",
     	"str_minutes": "Minuten",
     	"str_one_minute": "einer Minute",
     	"str_no_event": "Keine bevorstehende Ereignisse gefunden",
-    	"str_reloaded": "Ereignisse neu geladen um",
-    	"str_iteration": "Iteration:",
+    	"str_reloaded": "Ereignisse zuletzt neu geladen um",
+    	"str_on": "am",
+    	"str_stints": "Durchgänge: ",
+    	"str_iteration": "Minuten im Durchgang:",
     	"str_upcoming": "Hole die nächsten ",
     	"str_events": " Ereignisse ..."
   	},
   	{
     	"lang": "en",
+    	"str_lookahead": "Maximum number of events in preview: ",
     	"str_begins": "begins in",
     	"str_minutes": "minutes",
     	"str_one_minute": "one minute",
     	"str_no_event": "No upcoming events found",
-    	"str_reloaded": "Events reloaded at",
-    	"str_iteration": "Iteration:",
+    	"str_reloaded": "Events lastreloaded at",
+    	"str_on": "on",
+    	"str_stints": "Stints: ",
+    	"str_iteration": "Minutes in stint:",
     	"str_upcoming": "Getting the next ",
     	"str_events": " events ..."
   	}

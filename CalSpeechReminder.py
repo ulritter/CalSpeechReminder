@@ -15,7 +15,10 @@
 # (c) ulritter, 2021, GPL License 3.0
 #==========================================================
 #
-# todo: sound subdirectory, better screen output, run as a daemon
+# TODO: sound subdirectory
+# TODO: better screen output
+# TODO: run as a daemon
+# TODO: better exit
 #
 from __future__ import print_function
 import datetime
@@ -24,6 +27,7 @@ import os
 import os.path
 import urllib3
 import time
+import threading
 from datetime import date
 from gtts import gTTS
 from pydub import AudioSegment
@@ -50,21 +54,27 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 #
 def LoadDefaultLanguage():
 	global language
+	global str_lookahead
 	global str_begins
 	global str_minutes 
 	global str_one_minute
 	global str_no_event
 	global str_reloaded 
+	global str_stints
 	global str_iteration
 	global str_upcoming
 	global str_events
+	global str_on
 	language = 'en'
+	str_lookahead = 'Maximum number of events in preview: '
 	str_begins = 'begins in'
 	str_minutes = 'minutes'
 	str_one_minute = 'one minute'
 	str_no_event = 'No upcoming events found'
-	str_reloaded = 'Events reloaded at'
-	str_iteration = 'Iteration:'
+	str_reloaded = 'Events last reloaded at'
+	str_on = 'on'
+	str_stints ='Stints: '
+	str_iteration = 'Minutes in stint:'
 	str_upcoming = 'Getting the next '
 	str_events = ' events ...'
 
@@ -130,21 +140,26 @@ try:
 			str_clear = prefs['str_clear']
 			number_events = int(prefs['number_events'])
 			refresh_timer = int(prefs['refresh_timer'])
+			
 			alerts=[]
 			for alert in prefs['alerts']:
 				alerts.append(int(alert['alert_time']))
+				
 			language_found = False
-			for locale in prefs['locales']:
-				if locale['lang'] == language:
+			for _locale in prefs['locales']:
+				if _locale['lang'] == language:
 					language_found = True
-					str_begins = locale['str_begins']
-					str_minutes = locale['str_minutes']
-					str_one_minute = locale['str_one_minute']
-					str_no_event = locale['str_no_event']
-					str_reloaded = locale['str_reloaded']
-					str_iteration = locale['str_iteration']
-					str_upcoming = locale['str_upcoming']
-					str_events = locale['str_events']
+					str_lookahead = _locale['str_lookahead']
+					str_begins = _locale['str_begins']
+					str_minutes = _locale['str_minutes']
+					str_one_minute = _locale['str_one_minute']
+					str_no_event = _locale['str_no_event']
+					str_reloaded = _locale['str_reloaded']
+					str_on = _locale['str_on']
+					str_stints = _locale['str_stints']
+					str_iteration = _locale['str_iteration']
+					str_upcoming = _locale['str_upcoming']
+					str_events = _locale['str_events']
 					
 			# if the prefs.json "language" entry is not matched by any of the translations
 			# raise an exception
@@ -159,7 +174,7 @@ try:
 except LangNotFound:
 	LoadDefaultLanguage() 
 	
-# fill defaults in case we have probelems reaading the prefs file	
+# fill defaults in case we have problems reaading the prefs file	
 except EnvironmentError: 
 	LoadDefaults()
 	
@@ -202,11 +217,7 @@ def get_events(number_events):
 
     # Call the Calendar API
     startlooking = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-
-    if status_output:
-    	clearscreen()
-    	print(str_upcoming,number_events,str_events)
-    	time.sleep(3)
+    	
     events_result = service.events().list(calendarId='primary', timeMin=startlooking,
                                         maxResults=number_events, singleEvents=True,
                                         orderBy='startTime').execute()
@@ -221,7 +232,7 @@ def _play_with_ffplay_suppress(seg):
 		devnull = open(os.devnull, 'w')
 		subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull)   
         
-# text-to-speech output of a given character strimg
+# text-to-speech output of a given character string
 def speak(speak_text,speak_lang,alert_sound):
 	tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
 	tts.save(str_tts_sound_file)
@@ -235,34 +246,35 @@ def speak(speak_text,speak_lang,alert_sound):
 def main():
 	# disable warnings we might get from text to speech module
 	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-	# set language and text snippets for text to speech
+	# 
 	#
 	if status_output:
 		clearscreen()
 		music = AudioSegment.from_mp3(str_initial_sound_file)
-		_play_with_ffplay_suppress(music)
-
+		threading.Thread(target=_play_with_ffplay_suppress, args=(music,)).start()
+		# code without threading:
+		#_play_with_ffplay_suppress(music)
 	#
 	events = get_events(number_events)
 	#reset counter 
 	counter = 0
+	stints = 1
 
 	#
 	last = dateutil.parser.parse(datetime.datetime.now().isoformat())
     
-  #endless loop, waiting for keyboard interrupt or empty calendar
+  #endless loop, waiting for keyboard interrupt
 	while True:
     # we need to be able to subtract the time stamps, hence we need to force both to the same format	
 		now = dateutil.parser.parse(datetime.datetime.now().isoformat())
-		
-		if not events and status_output:
-			clearscreen()
-			print(str_no_event)
-			break
-			
+
 		if status_output:
-				clearscreen()
-				print(str_divider)
+			clearscreen()
+			print(str_lookahead, number_events)
+			print(str_divider)
+			if not events :
+				print(str_no_event)
+
 		#
 		# go through our event list
 		# it is somewhat redundant to scan the entire list if the parameters "number_events" and "refresh_timer"
@@ -278,7 +290,7 @@ def main():
 			# we need to be able to subtract the time stamps, hence we need to force naive (time zone un-aware) representation
 			dtu = dateutil.parser.parse(start).replace(tzinfo=None)
 			
-			# time differnce between now and event in minutes
+			# time difference between now and event in minutes
 			timeDiff=int(((dtu-now).total_seconds())/60)
 			
 			if status_output:
@@ -287,21 +299,29 @@ def main():
 			# if we have hit one of the alert times alert via sound & text-to-speech 
 			for alert_time in alerts:
 				if timeDiff == alert_time:
-					speak(summary + str_begins + str(timeDiff) + str_minutes,language, alert_sound)
+					if timeDiff == 1:
+						threading.Thread(target=speak, args=(summary + str_begins + str_one_minute,language,alert_sound)).start()
+						# code without threading:
+						#speak(summary + str_begins + str_one_minute,language, alert_sound)
+					else:
+						threading.Thread(target=speak, args=(summary + str_begins + str(timeDiff) + str_minutes,language,alert_sound)).start()
+						# code without threading:
+						#speak(summary + str_begins + str(timeDiff) + str_minutes,language, alert_sound)
 
-		# reload calendar every refresh_timer minutes  
-		counter = counter + 1  	
-		if counter > (refresh_timer - 1):
-			events = get_events(number_events)
-			counter = 0
-			last = now  	
-				
 		if status_output:
 			print(str_divider)
-			print(str_iteration,' ',counter,' ',str_reloaded,' ', last)
-				
+			print(str_iteration,' ',counter+1,'   ', str_stints, stints)
+			print(str_reloaded,' ', last.strftime("%H:%M:%S"),str_on,last.strftime("%d-%b-%Y"))
+			
 		time.sleep(60)
-	 
-        
+		
+		# reload calendar every refresh_timer minutes  
+		counter = counter + 1  	
+		if counter >=	 (refresh_timer):
+			events = get_events(number_events)
+			counter = 0
+			stints = stints + 1
+			last = now  	
+    
 if __name__ == '__main__':
     main()
