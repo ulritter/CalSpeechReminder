@@ -19,6 +19,7 @@
 # TODO: better screen output
 # TODO: run as a daemon
 # TODO: better exit
+# TODO: catch json key error
 #
 from __future__ import print_function
 import datetime
