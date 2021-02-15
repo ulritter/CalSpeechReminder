@@ -74,8 +74,8 @@ def LoadDefaultLanguage():
 	str_no_event = 'No upcoming events found'
 	str_reloaded = 'Events last reloaded at'
 	str_on = 'on'
-	str_stints ='Stints: '
-	str_iteration = 'Minutes in stint:'
+	str_stints ='Passes: '
+	str_iteration = 'Minutes in pass:'
 	str_upcoming = 'Getting the next '
 	str_events = ' events ...'
 

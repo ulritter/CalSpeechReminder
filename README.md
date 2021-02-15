@@ -20,13 +20,16 @@ The scripts reads the prefs.json file to load preferences. The explanation of th
 	
 	"locales": translation packet for the different strings / meesages in use
     	"lang": identifier tag for the translation packet below - DO NOT CHANGE -
+    	"str_lookahead": string like "Maximum number of events in preview: "
     	"str_begins": string like "begins in",
     	"str_minutes": string like "minutes",
     	"str_one_minute": string like "one minute",
     	"str_no_event": string like "No upcoming events found",
     	"str_reloaded": string like "Events reloaded at",
-    	"str_iteration": string like "Iteration:",
-    	"str_upcoming": "string likeGetting the next ",
+    	"str_on": string like "on",
+    	"str_stints": string like "Passes: ",
+    	"str_iteration": string like "Minutes in pass:",
+    	"str_upcoming": string like "Getting the next ",
     	"str_events": string like " events ...".
     	
     	New languages can be added by adding new "locales" translation packets
