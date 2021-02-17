@@ -233,8 +233,8 @@ def get_events(number_events):
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists(filepath+'token.pickle'):
-        with open(filepath+'token.pickle', 'rb') as token:
+    if os.path.exists(filepath+'.'+path_delim+'token.pickle'):
+        with open(filepath+'.'+path_delim+'token.pickle', 'rb') as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -279,6 +279,7 @@ def speak(speak_text,speak_lang,alert_sound):
 
 
 def main(argv):
+	global path_delim
 	if platform.system() == 'Windows':
 		path_delim = '\\'
 	else:
