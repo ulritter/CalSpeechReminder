@@ -29,7 +29,9 @@ The scripts reads the prefs.json file to load preferences. The explanation of th
     	"str_stints": string like "Passes: ",
     	"str_iteration": string like "Minutes in pass:",
     	"str_upcoming": string like "Getting the next ",
-    	"str_events": string like " events ...".
+    	"str_events": string like " events ..."
+    	"str_nodir": string like " does not exist or is not a directory",
+    	"str_wrongdir": string like " is the wrong directory"
     	
     	New languages can be added by adding new "locales" translation packets
 
