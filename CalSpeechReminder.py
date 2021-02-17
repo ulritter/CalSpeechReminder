@@ -201,6 +201,7 @@ def get_prefs(prefs_file):
 				# if the prefs.json "language" entry is not matched by any of the translations
 				# fill default language entries 		
 				if not language_found:
+					print('Language ', language,' not found. Still starting, but with defaults ...')
 					LoadDefaultLanguage()
 				
 			# fill defaults in case of any json parsing issue (delimiter missing, etc)			
