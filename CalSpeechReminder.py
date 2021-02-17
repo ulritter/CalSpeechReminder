@@ -22,13 +22,16 @@
 # TODO: catch json key error
 #
 from __future__ import print_function
+from pathlib import Path
 import datetime
 import pickle
 import os
 import os.path
+import sys, getopt
 import urllib3
 import time
 import threading
+import platform
 from datetime import date
 from gtts import gTTS
 from pydub import AudioSegment
@@ -66,6 +69,9 @@ def LoadDefaultLanguage():
 	global str_upcoming
 	global str_events
 	global str_on
+	global str_nodir
+	global str_wrongdir
+	
 	language = 'en'
 	str_lookahead = 'Maximum number of events in preview: '
 	str_begins = 'begins in'
@@ -78,6 +84,8 @@ def LoadDefaultLanguage():
 	str_iteration = 'Minutes in pass:'
 	str_upcoming = 'Getting the next '
 	str_events = ' events ...'
+	str_nodir =  'does not exist or is not a directory'
+	str_wrongdir =  'is the wrong directory'
 
 def LoadDefaults():
 	global status_output
@@ -91,18 +99,18 @@ def LoadDefaults():
 	global number_events
 	global refresh_timer
 	global status_output
-	
+
 	LoadDefaultLanguage()
 	# operation system command to clear screen
-	status_output = Truex
+	status_output = True
 	str_clear = 'clear'
 	str_divider = '==================================================================='
 	# StarTrek Transporter sound on startup - just for fun
-	str_initial_sound_file = './transporter.mp3'
+	str_initial_sound_file = 'transporter.mp3'
 	#theater gong :-)
-	str_alert_sound_file = './gong.mp3'
+	str_alert_sound_file = 'gong.mp3'
 	# temp file for generated tts sound
-	str_tts_sound_file = './speech.mp3'
+	str_tts_sound_file = 'speech.mp3'
 	# countdown delta minutes to trigger alert messages
 	alerts = [1,5,10]
 	# get next n google calendar events beginning from now
@@ -117,69 +125,94 @@ def LoadDefaults():
 class LangNotFound(Exception):
 	pass
 	
-try:
-	with open('prefs.json') as f:
-		try:
-			prefs = json.load(f)
-
-			if prefs['status_output'] == 'on':
-				status_output = True
-			else:
-				status_output = False
+def get_prefs(prefs_file):
+	global status_output
+	global str_clear
+	global alert_sound
+	global str_divider
+	global str_initial_sound_file
+	global str_alert_sound_file
+	global str_tts_sound_file
+	global alerts
+	global number_events
+	global refresh_timer
+	global status_output
+	global language
+	global str_lookahead
+	global str_begins
+	global str_minutes 
+	global str_one_minute
+	global str_no_event
+	global str_reloaded 
+	global str_stints
+	global str_iteration
+	global str_upcoming
+	global str_events
+	global str_on
+	global str_nodir
+	global str_wrongdir	
+	
+	try:
+		with open(prefs_file) as f:
+			try:
+				prefs = json.load(f)
+				if prefs['status_output'] == 'on':
+					status_output = True
+				else:
+					status_output = False
 				
-			if prefs['str_alert_sound'] == 'on':
-				alert_sound = True
-			else:
-				alert_sound = False
+				if prefs['str_alert_sound'] == 'on':
+					alert_sound = True
+				else:
+					alert_sound = False
 				
-			language = prefs['language']
-			str_clear = prefs['str_clear']
-			str_divider = prefs['str_divider']
-			str_initial_sound_file = prefs['str_initial_sound_file']
-			str_alert_sound_file = prefs['str_alert_sound_file']
-			str_tts_sound_file = prefs['str_tts_sound_file']
-			str_clear = prefs['str_clear']
-			number_events = int(prefs['number_events'])
-			refresh_timer = int(prefs['refresh_timer'])
+				language = prefs['language']
+				str_clear = prefs['str_clear']
+				str_divider = prefs['str_divider']
+				str_initial_sound_file = prefs['str_initial_sound_file']
+				str_alert_sound_file = prefs['str_alert_sound_file']
+				str_tts_sound_file = prefs['str_tts_sound_file']
+				str_clear = prefs['str_clear']
+				number_events = int(prefs['number_events'])
+				refresh_timer = int(prefs['refresh_timer'])
 			
-			alerts=[]
-			for alert in prefs['alerts']:
-				alerts.append(int(alert['alert_time']))
+				alerts=[]
+				for alert in prefs['alerts']:
+					alerts.append(int(alert['alert_time']))
 				
-			language_found = False
-			for _locale in prefs['locales']:
-				if _locale['lang'] == language:
-					language_found = True
-					str_lookahead = _locale['str_lookahead']
-					str_begins = _locale['str_begins']
-					str_minutes = _locale['str_minutes']
-					str_one_minute = _locale['str_one_minute']
-					str_no_event = _locale['str_no_event']
-					str_reloaded = _locale['str_reloaded']
-					str_on = _locale['str_on']
-					str_stints = _locale['str_stints']
-					str_iteration = _locale['str_iteration']
-					str_upcoming = _locale['str_upcoming']
-					str_events = _locale['str_events']
+				language_found = False
+				for _locale in prefs['locales']:
+					if _locale['lang'] == language:
+						language_found = True
+						str_lookahead = _locale['str_lookahead']
+						str_begins = _locale['str_begins']
+						str_minutes = _locale['str_minutes']
+						str_one_minute = _locale['str_one_minute']
+						str_no_event = _locale['str_no_event']
+						str_reloaded = _locale['str_reloaded']
+						str_on = _locale['str_on']
+						str_stints = _locale['str_stints']
+						str_iteration = _locale['str_iteration']
+						str_upcoming = _locale['str_upcoming']
+						str_events = _locale['str_events']
+						str_nodir = _locale['str_nodir']
+						str_wrongdir = _locale['str_wrongdir']
 					
-			# if the prefs.json "language" entry is not matched by any of the translations
-			# raise an exception
-			if not language_found:
-				raise LangNotFound()
+				# if the prefs.json "language" entry is not matched by any of the translations
+				# fill default language entries 		
+				if not language_found:
+					LoadDefaultLanguage()
 				
-		# fill defaults in case of any json parsing issue (delimiter missing, etc)			
-		except ValueError:
-			LoadDefaults()
-			
-# fill default language entries in case we have no match for language in the prefs file			
-except LangNotFound:
-	LoadDefaultLanguage() 
+			# fill defaults in case of any json parsing issue (delimiter missing, etc)			
+			except (ValueError, KeyError) as jerr:
+				print('Please check prefs file. Still starting, but with defaults ...')
+				LoadDefaults()
+				
+	except (EnvironmentError) as jerr:
+		print('Please check prefs file. Still starting, but with defaults ...')
+		timr.sleep(5)
+		LoadDefaults()
 	
-# fill defaults in case we have problems reaading the prefs file	
-except EnvironmentError: 
-	LoadDefaults()
-	
-
 #
 #============================================================
 #========= end customization section ========================
@@ -199,8 +232,8 @@ def get_events(number_events):
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+    if os.path.exists(filepath+'token.pickle'):
+        with open(filepath+'token.pickle', 'rb') as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -236,22 +269,57 @@ def _play_with_ffplay_suppress(seg):
 # text-to-speech output of a given character string
 def speak(speak_text,speak_lang,alert_sound):
 	tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
-	tts.save(str_tts_sound_file)
+	tts.save(filepath+str_tts_sound_file)
 	if alert_sound:
-		music = AudioSegment.from_mp3(str_alert_sound_file)
+		music = AudioSegment.from_mp3(filepath+str_alert_sound_file)
 		_play_with_ffplay_suppress(music)
-	music = AudioSegment.from_mp3(str_tts_sound_file)
+	music = AudioSegment.from_mp3(filepath+str_tts_sound_file)
 	_play_with_ffplay_suppress(music)
 
 
-def main():
+def main(argv):
+	if platform.system() == 'Windows':
+		path_delim = '\\'
+	else:
+		path_delim = '/'
+	
+	global filepath
+	filepath = ''
+	
+	#just to have some strings in place
+	LoadDefaults()
+
+	# if argument given we expect help as argument or the working directory as an option
+	if len(sys.argv) > 1:
+		try:
+			opts, args = getopt.getopt(argv,"hd:",["dir="])
+		except getopt.GetoptError:
+			print ('Usage: ', str(sys.argv[0]), '-d <base directory> ')
+			sys.exit(2)
+		for opt, arg in opts:
+			if opt in ("-h", "--help"):
+				print (os.path.basename(str(sys.argv[0])),'-d <base directory>')
+				sys.exit()
+			elif opt in ("-d", "--dir"):
+				filepath = arg+path_delim
+		
+		if not Path(filepath).is_dir():
+			print (filepath, str_nodir)
+			sys.exit(2)
+		elif not Path(filepath+path_delim+'prefs.json').is_file():
+			print (filepath, str_wrongdir)
+			sys.exit(2)
+				
+	prefsfile = filepath+'.'+path_delim+'prefs.json'			
+	get_prefs(prefsfile)
+
 	# disable warnings we might get from text to speech module
 	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 	# 
 	#
 	if status_output:
 		clearscreen()
-		music = AudioSegment.from_mp3(str_initial_sound_file)
+		music = AudioSegment.from_mp3(filepath+str_initial_sound_file)
 		threading.Thread(target=_play_with_ffplay_suppress, args=(music,)).start()
 		# code without threading:
 		#_play_with_ffplay_suppress(music)
@@ -325,4 +393,4 @@ def main():
 			last = now  	
     
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

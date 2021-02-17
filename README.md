@@ -1,7 +1,6 @@
-This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech
+This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
 
-This was originally built to run on a Raspberry Pi using Python 2.7 but may equally be able to run on any other system with the necessary
-adaptions like the operating system commands etc.
+This was originally built to run on a Raspberry Pi using Python 2.7 but may equally be able to run on any other system with the necessary adaptions like the operating system commands etc.
 
 The scripts reads the prefs.json file to load preferences. The explanation of these preferences are here:
 
@@ -48,6 +47,18 @@ pip install pydub
 pip install datetime
 
 pip install python-dateutil
+
+pip install pathlib
+
+The scipt can be called without parameters. In this case it expects to be invoked from within its base directory. If it is being invoked from outside its base directory (e.g. via desktop icon) the absolute or relative path to the base directory (where sound files and the prefs.json preference file are expected) can be given via command line parameter.
+
+Usage:  CalSpeechReminder.py [-d | --dir <base directory>] 
+
+or
+
+Usage:  CalSpeechReminder.py -h | --help
+
+printing some help output
 
 
 

@@ -2,10 +2,10 @@
 	"status_output": "on",
 	"str_clear": "clear",
 	"str_divider" : "===================================================================",
-	"str_initial_sound_file": "./jarvis_alerts.mp3",
+	"str_initial_sound_file": "jarvis_alerts.mp3",
 	"str_alert_sound": "on",
-  "str_alert_sound_file": "./gong.mp3",
-	"str_tts_sound_file": "./speech.mp3",
+  "str_alert_sound_file": "gong.mp3",
+	"str_tts_sound_file": "speech.mp3",
 	"alerts": [
 		{"alert_time": "10"},
 		{"alert_time": "5"},
@@ -29,7 +29,9 @@
     	"str_stints": "Durchgänge: ",
     	"str_iteration": "Minuten im Durchgang:",
     	"str_upcoming": "Hole die nächsten ",
-    	"str_events": " Ereignisse ..."
+    	"str_events": " Ereignisse ...",
+    	"str_nodir": "existiert nicht oder ist kein Verzeichnis",
+    	"str_wrongdir": " ist das falsche Verzeichnis"
   	},
   	{
     	"lang": "en",
@@ -43,7 +45,9 @@
     	"str_stints": "Passes: ",
     	"str_iteration": "Minutes in pass:",
     	"str_upcoming": "Getting the next ",
-    	"str_events": " events ..."
+    	"str_events": " events ...",
+    	"str_nodir": " does not exist or is not a directory",
+    	"str_wrongdir": " is the wrong directory"
   	}
 	]
 }
