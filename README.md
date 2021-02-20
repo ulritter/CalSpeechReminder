@@ -1,10 +1,10 @@
-# Speech Output fro Google calendar
+# Speech Output for Google calendar
 
 ### This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
 
 This was originally built to run on a Raspberry Pi using Python 2.7 but may equally be able to run on any other system with the necessary adaptions like the operating system commands etc.
 
-The scripts reads the prefs.json file to load preferences. The explanation of these preferences are here:
+The scripts reads the **_prefs.json_** file to load preferences. The explanation of these preferences are here:
 
 	"status_output": if "on" the script turns verbose displaying console messages
 	"str_clear": command for os.system() to clear the screen, e.g. 'clear' in Linux or 'cls' in Windows
