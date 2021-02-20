@@ -2,7 +2,7 @@
 
 ### This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
 
-This was originally built to run on a Raspberry Pi using Python 2.7 but may equally be able to run on any other system with the necessary adaptions like the operating system commands etc.
+This was originally built to run on a Raspberry Pi using Python 2.7 but can equally be run on any other system with the necessary adaptions like the operating system commands (in prefs.jason), path delimiter character (in source code). I have tested it on Raspian with Python 2.7, with Python 3.0 on MacOs Mojave, and with Python yx on Windows 10.
 
 The scripts reads the **_prefs.json_** file to load preferences. The explanation of these preferences are here:
 
@@ -67,7 +67,7 @@ printing some help output
 --------------------------------------------------------
 
 
-While the script is designed to run on Linux, MacOs, and Windows, I use it on a Raspberry Pi. Though, here's an example for Raspbian on how to put it as an icon on the desktop (the cal.png) icon is included:
+While the script is designed to run on Linux, MacOs, and Windows, as mentioned above, I use it on a Raspberry Pi. Though, here's an example for Raspbian on how to put it as an icon on the desktop (the cal.png) icon is included:
 
 
 [Desktop Entry]

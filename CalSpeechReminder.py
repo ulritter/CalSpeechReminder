@@ -103,7 +103,10 @@ def LoadDefaults():
 	LoadDefaultLanguage()
 	# operation system command to clear screen
 	status_output = True
-	str_clear = 'clear'
+	str_clear_linux = 'clear'
+	str_clear_windows = 'cls'
+	str_pathdivider_linux = '/'
+	str_pathdivider_windows = '\\'
 	str_divider = '==================================================================='
 	# StarTrek Transporter sound on startup - just for fun
 	str_initial_sound_file = 'transporter.mp3'
@@ -167,7 +170,10 @@ def get_prefs(prefs_file):
 					alert_sound = False
 				
 				language = prefs['language']
-				str_clear = prefs['str_clear']
+				str_clear_linux = prefs['str_clear_linux']
+				str_clear_windows = prefs['str_clear_windows']
+				str_pathdivider_linux = prefs['str_pathdivider_linux']
+				str_pathdivider_windows = prefs['str_pathdivider_windows']
 				str_divider = prefs['str_divider']
 				str_initial_sound_file = prefs['str_initial_sound_file']
 				str_alert_sound_file = prefs['str_alert_sound_file']
@@ -279,11 +285,15 @@ def speak(speak_text,speak_lang,alert_sound):
 
 
 def main(argv):
+	# operating system specific settings
 	global path_delim
+	global str_clear
 	if platform.system() == 'Windows':
-		path_delim = '\\'
+		path_delim = str_pathdivider_windows
+		str_clear = str_clear_windows
 	else:
-		path_delim = '/'
+		path_delim = str_pathdivider_linux
+		str_clear = str_clear_linux
 	
 	global filepath
 	filepath = ''
