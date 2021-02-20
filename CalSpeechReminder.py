@@ -154,6 +154,10 @@ def get_prefs(prefs_file):
 	global str_on
 	global str_nodir
 	global str_wrongdir	
+	global str_clear_linux
+	global str_clear_windows
+	global str_pathdivider_linux
+	global str_pathdivider_windows
 	
 	try:
 		with open(prefs_file) as f:
