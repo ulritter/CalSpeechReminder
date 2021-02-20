@@ -19,7 +19,6 @@
 # TODO: better screen output
 # TODO: run as a daemon
 # TODO: better exit
-# TODO: catch json key error
 #
 from __future__ import print_function
 from pathlib import Path
@@ -89,7 +88,6 @@ def LoadDefaultLanguage():
 
 def LoadDefaults():
 	global status_output
-	global str_clear
 	global alert_sound
 	global str_divider
 	global str_initial_sound_file
@@ -103,10 +101,6 @@ def LoadDefaults():
 	LoadDefaultLanguage()
 	# operation system command to clear screen
 	status_output = True
-	str_clear_linux = 'clear'
-	str_clear_windows = 'cls'
-	str_pathdivider_linux = '/'
-	str_pathdivider_windows = '\\'
 	str_divider = '==================================================================='
 	# StarTrek Transporter sound on startup - just for fun
 	str_initial_sound_file = 'transporter.mp3'
@@ -130,7 +124,6 @@ class LangNotFound(Exception):
 	
 def get_prefs(prefs_file):
 	global status_output
-	global str_clear
 	global alert_sound
 	global str_divider
 	global str_initial_sound_file
@@ -154,10 +147,7 @@ def get_prefs(prefs_file):
 	global str_on
 	global str_nodir
 	global str_wrongdir	
-	global str_clear_linux
-	global str_clear_windows
-	global str_pathdivider_linux
-	global str_pathdivider_windows
+
 	
 	try:
 		with open(prefs_file) as f:
@@ -174,15 +164,10 @@ def get_prefs(prefs_file):
 					alert_sound = False
 				
 				language = prefs['language']
-				str_clear_linux = prefs['str_clear_linux']
-				str_clear_windows = prefs['str_clear_windows']
-				str_pathdivider_linux = prefs['str_pathdivider_linux']
-				str_pathdivider_windows = prefs['str_pathdivider_windows']
 				str_divider = prefs['str_divider']
 				str_initial_sound_file = prefs['str_initial_sound_file']
 				str_alert_sound_file = prefs['str_alert_sound_file']
 				str_tts_sound_file = prefs['str_tts_sound_file']
-				str_clear = prefs['str_clear']
 				number_events = int(prefs['number_events'])
 				refresh_timer = int(prefs['refresh_timer'])
 			
@@ -212,15 +197,17 @@ def get_prefs(prefs_file):
 				# fill default language entries 		
 				if not language_found:
 					print('Language ', language,' not found. Still starting, but with defaults ...')
+					time.sleep(5)
 					LoadDefaultLanguage()
 				
 			# fill defaults in case of any json parsing issue (delimiter missing, etc)			
 			except (ValueError, KeyError) as jerr:
-				print('Please check prefs file. Still starting, but with defaults ...')
+				print('Value or Key Error: Please check prefs file. Still starting, but with defaults ...:', jerr)
+				time.sleep(5)
 				LoadDefaults()
 				
 	except (EnvironmentError) as jerr:
-		print('Please check prefs file. Still starting, but with defaults ...')
+		print('Environment error. Please check prefs file. Still starting, but with defaults ...:', jerr)
 		timr.sleep(5)
 		LoadDefaults()
 	
@@ -270,21 +257,31 @@ def get_events(number_events):
     return (events)
 
 # function to supress output while playing mp3 files
+# modified clone of original pydub code
 def _play_with_ffplay_suppress(seg):
 	PLAYER = get_player_name()
-	with tempfile.NamedTemporaryFile("w+b", suffix=".mp3") as f:
-		seg.export(f.name, "mp3")
-		devnull = open(os.devnull, 'w')
-		subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull)   
+	# create temporary mp3 file for audio output since "with NamedTemporaryFile("w+b", suffix=".mp3") as f:"
+	# as used in original pydub code comes up with double back slash errors in Windows
+	if os.path.exists(filepath+'.'+path_delim):
+		with open(filepath+'.'+path_delim+'tmp.mp3', 'wb') as f:
+			seg.export(f.name, "mp3")
+			devnull = open(os.devnull, 'w')
+			subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull) 
+
         
 # text-to-speech output of a given character string
 def speak(speak_text,speak_lang,alert_sound):
+	# convert string to speech
 	tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
 	tts.save(filepath+str_tts_sound_file)
+	# build output sound file
+	music = AudioSegment.empty()
 	if alert_sound:
-		music = AudioSegment.from_mp3(filepath+str_alert_sound_file)
-		_play_with_ffplay_suppress(music)
-	music = AudioSegment.from_mp3(filepath+str_tts_sound_file)
+		# if there is a gong or alike (prefs.json) defined then add the sound to the output
+		music += AudioSegment.from_mp3(filepath+str_alert_sound_file)
+	# add converted string	
+	music += AudioSegment.from_mp3(filepath+str_tts_sound_file)
+	# crank it out ...
 	_play_with_ffplay_suppress(music)
 
 
@@ -293,11 +290,11 @@ def main(argv):
 	global path_delim
 	global str_clear
 	if platform.system() == 'Windows':
-		path_delim = str_pathdivider_windows
-		str_clear = str_clear_windows
+		path_delim = '\\'
+		str_clear = 'cls'
 	else:
-		path_delim = str_pathdivider_linux
-		str_clear = str_clear_linux
+		path_delim = '/'
+		str_clear = 'clear'
 	
 	global filepath
 	filepath = ''
@@ -336,6 +333,7 @@ def main(argv):
 	if status_output:
 		clearscreen()
 		music = AudioSegment.from_mp3(filepath+str_initial_sound_file)
+
 		threading.Thread(target=_play_with_ffplay_suppress, args=(music,)).start()
 		# code without threading:
 		#_play_with_ffplay_suppress(music)

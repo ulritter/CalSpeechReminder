@@ -2,12 +2,11 @@
 
 ### This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
 
-This was originally built to run on a Raspberry Pi using Python 2.7 but can equally be run on any other system with the necessary adaptions like the operating system commands (in prefs.jason), path delimiter character (in source code). I have tested it on Raspian with Python 2.7, with Python 3.0 on MacOs Mojave, and with Python yx on Windows 10.
+This was originally built to run on a Raspberry Pi using Python 2.7 but can be equally run on either MacOs or Windows. The script is supposed to adapt automatically. I have tested it with Python 2.7 on Raspian, with Python 3.6.4 on MacOs Mojave, and with Python 3.9.1 on Windows 10.
 
 The scripts reads the **_prefs.json_** file to load preferences. The explanation of these preferences are here:
 
 	"status_output": if "on" the script turns verbose displaying console messages
-	"str_clear": command for os.system() to clear the screen, e.g. 'clear' in Linux or 'cls' in Windows
 	"str_divider": line in ascii to have a visual speration of data
 	"str_initial_sound_file": sound file played on startup
 	"str_alert_sound": if "on" the sound in the "str_alert_sound_file" below is played before the calender text-to-speech output
@@ -53,6 +52,10 @@ pip install datetime
 pip install python-dateutil
 
 pip install pathlib
+
+ffmpeg on operating system level
+
+
 
 The scipt can be called without parameters. In this case it expects to be invoked from within its base directory. If it is being invoked from outside its base directory (e.g. via desktop icon) the absolute or relative path to the base directory (where sound files and the prefs.json preference file are expected) can be given via command line parameter.
 

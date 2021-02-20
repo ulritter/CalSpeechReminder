@@ -1,9 +1,5 @@
 {
 	"status_output": "on",
-	"str_clear_linux": "clear",
-	"str_clear_windows": "cls",
-	"str_pathdivider_linux": "/",
-	"str_pathdivider_windows": "\\",
 	"str_divider" : "===================================================================",
 	"str_initial_sound_file": "jarvis_alerts.mp3",
 	"str_alert_sound": "on",

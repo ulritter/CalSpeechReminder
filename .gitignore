@@ -1,6 +1,6 @@
 *.jpg
 *.pickle
 *.desktop
-*.png
+tmp.mp3
 speech.mp3
 credentials.json
