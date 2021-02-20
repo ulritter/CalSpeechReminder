@@ -1,4 +1,6 @@
-This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
+#Speech Output fro Google calendar
+
+###This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
 
 This was originally built to run on a Raspberry Pi using Python 2.7 but may equally be able to run on any other system with the necessary adaptions like the operating system commands etc.
 
@@ -54,7 +56,7 @@ pip install pathlib
 
 The scipt can be called without parameters. In this case it expects to be invoked from within its base directory. If it is being invoked from outside its base directory (e.g. via desktop icon) the absolute or relative path to the base directory (where sound files and the prefs.json preference file are expected) can be given via command line parameter.
 
-Usage:  CalSpeechReminder.py [-d | --dir <base directory>] 
+Usage:  CalSpeechReminder.py \[-d | --dir \<base directory\>] 
 
 or
 
@@ -62,7 +64,19 @@ Usage:  CalSpeechReminder.py -h | --help
 
 printing some help output
 
+--------------------------------------------------------
 
 
+While the script is designed to run on Linux, MacOs, and Windows, I use it on a Raspberry Pi. Though, here's an example for Raspbian on how to put it as an icon on the desktop (the cal.png) icon is included:
 
 
+[Desktop Entry]
+Name=CalSpeech
+Type=Application
+#Exec=lxterminal -t "CalSpeech" --working-directory=/home/pi/CalSpeechReminder/ -e python CalSpeechReminder.py
+Exec=/usr/bin/python /home/pi/CalSpeechReminder/CalSpeechReminder.py -d /home/pi/CalSpeechReminder
+Icon=/home/pi/CalSpeechReminder/cal.png
+Comment=Spoken Calendar Reminders
+Terminal=true
+X-KeepTerminal=true
+StartupNotify=true
