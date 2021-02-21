@@ -41,7 +41,8 @@ https://developers.google.com/calendar/quickstart/python
 
 These installs might become necessary along the process:
 
-```pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+```
+pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 pip install gTTS pyttsx3 playsound
 
@@ -51,8 +52,8 @@ pip install datetime
 
 pip install python-dateutil
 
-pip install pathlib```
-
+pip install pathlib
+```
 
 Since the sound library used in python relies on ffmpeg, ffmpeg needs to be installed
 
