@@ -88,7 +88,7 @@ printing some help output
 While the script is designed to run on Linux, MacOs, and Windows, as mentioned above, I use it on a Raspberry Pi. Though, here's an example for Raspbian on how to put it as an icon on the desktop (the cal.png) icon is included:
 
 ```
-\[Desktop Entry\]
+[Desktop Entry]
 Name=CalSpeech
 Type=Application
 Exec=/usr/bin/python /home/pi/CalSpeechReminder/CalSpeechReminder.py -d /home/pi/CalSpeechReminder
