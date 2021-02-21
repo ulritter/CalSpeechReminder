@@ -34,6 +34,8 @@ The scripts reads the **_prefs.json_** file to load preferences. The explanation
     	"str_events": string like " events ..."
     	"str_nodir": string like " does not exist or is not a directory",
     	"str_wrongdir": string like " is the wrong directory"
+    	"str_signal": string like "Exiting after signal: ",
+    	"str_exit_msg": string like "The following keys terminate the program: "
     	
     	New languages can be added by adding new "locales" translation packets
 
