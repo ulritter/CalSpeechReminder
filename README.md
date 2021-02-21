@@ -62,7 +62,7 @@ Since the sound library used in python relies on ffmpeg, ffmpeg needs to be inst
 If this does not work for some reason, ffmpeg should be installed on operating system level:
 
 On Windows:
-- Download from the .exe filed https://ffmpeg.org/download.html#build-windows, put them in a directory and add the directory to the PATH
+- Download from the .exe files in https://ffmpeg.org/download.html#build-windows, put them in a directory and add the directory to the PATH
 
 On MacOS
 - Easiest way is to install it via MacPorts (`sudo port install ffmpeg`) or Homebrew (`brew install ffmpeg`)
