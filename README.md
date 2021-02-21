@@ -72,13 +72,13 @@ On Raspbian:
 
 
 
-The scipt can be called without parameters. In this case it expects to be invoked from within its base directory. If it is being invoked from outside its base directory (e.g. via desktop icon) the absolute or relative path to the base directory (where sound files and the prefs.json preference file are expected) can be given via command line parameter.
+The CalSpeechReminder.py script can be called without parameters. In this case it expects to be invoked from within its base directory. If it is being invoked from outside its base directory (e.g. via desktop icon) the absolute or relative path to the base directory (where sound files and the prefs.json preference file are expected) can be given via command line parameter.
 
-Usage:  CalSpeechReminder.py \[-d | --dir \<base directory\>\] 
+**Usage:  CalSpeechReminder.py \[-d | --dir \<base directory\>\] **
 
 or
 
-Usage:  CalSpeechReminder.py \[-h | --help\]
+**Usage:  CalSpeechReminder.py \[-h | --help\]**
 
 printing some help output
 
