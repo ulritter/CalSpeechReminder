@@ -20,6 +20,7 @@
 # TODO: better screen output
 # TODO: run as a daemon
 # TODO: include logging
+# TODO: use official locale codes
 #
 from __future__ import print_function
 from pathlib import Path
@@ -488,7 +489,7 @@ def main(argv):
 	#
 	last = dateutil.parser.parse(datetime.datetime.now().isoformat())
 
-  # start thread to 
+	# start thread to check keyboard input in background
 	threading.Thread(target=check_keyboard_input, args=(exit,)).start()
 	
 	# loop, waiting for keyboard interrupt or exit character pressed
@@ -525,21 +526,18 @@ def main(argv):
 			if status_output:
 				print(summary, ' ', str_begins,' ', timeDiff,str_minutes)
 
-			# if we have hit one of the alert times alert via sound & text-to-speech 
+			# Once we have encountered one of the alert times, play alert via sound & text-to-speech 
 			for alert_time in alerts:
 				if timeDiff == alert_time:
 					if timeDiff == 1:
 						threading.Thread(target=speak, args=(summary + str_begins + str_one_minute,language,alert_sound)).start()
-						# code without threading:
-						#speak(summary + str_begins + str_one_minute,language, alert_sound)
 					else:
 						threading.Thread(target=speak, args=(summary + str_begins + str(timeDiff) + str_minutes,language,alert_sound)).start()
-						# code without threading:
-						#speak(summary + str_begins + str(timeDiff) + str_minutes,language, alert_sound)
 
 		if status_output:
 			print(str_divider)
 			print(str_iteration,' ',counter+1,'   ', str_stints, stints)
+			# TODO: locale specific date output
 			print(str_reloaded,' ', last.strftime("%H:%M:%S"),str_on,last.strftime("%d-%b-%Y"))
 			print(str_exit_msg, str_exit_chars)
 			
