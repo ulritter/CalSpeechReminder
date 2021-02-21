@@ -11,7 +11,8 @@ The scripts reads the **_prefs.json_** file to load preferences. The explanation
 	"str_initial_sound_file": sound file played on startup
 	"str_alert_sound": if "on" the sound in the "str_alert_sound_file" below is played before the calender text-to-speech output
 	"str_alert_sound_file": sound file played on alert if "str_alert_sound" above in "on"
-	"str_tts_sound_file": "temp soundfile where the text-to-speech conversion result is stored
+	"str_tts_sound_file": temp soundfile where the text-to-speech conversion result is stored
+	"str_exit_chars": string of characters which will cause the script to terminate, e.g. "xXeE"
 	"number_events": number of calendar entries to be read head 
 	"refresh_timer": how often (minutes) 
 	"alerts": list of "alert_time" values to trigger the output of alert reminder messages

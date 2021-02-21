@@ -10,7 +10,8 @@
 # system with the necessary adaptions like the operating 
 # system commands etc.
 #
-# Program exit via console ^C in this version
+# Program exit via console ^C or exit character specified
+# in prefs.json
 #
 # (c) ulritter, 2021, GPL License 3.0
 #==========================================================
@@ -18,7 +19,7 @@
 # TODO: sound subdirectory
 # TODO: better screen output
 # TODO: run as a daemon
-# TODO: better exit
+# TODO: include logging
 #
 from __future__ import print_function
 from pathlib import Path
@@ -30,6 +31,7 @@ import sys, getopt
 import urllib3
 import time
 import threading
+from threading import Event
 import platform
 from datetime import date
 from gtts import gTTS
@@ -37,6 +39,7 @@ from pydub import AudioSegment
 from pydub.playback import play
 from pydub.utils import get_player_name
 import tempfile
+import signal
 import subprocess
 import dateutil
 import dateutil.parser
@@ -47,6 +50,23 @@ from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+
+global exit
+exit = Event()
+
+# Code for getting keyboard input in a non-blocking way
+global isWindows
+
+isWindows = False
+try:
+    from win32api import STD_INPUT_HANDLE
+    from win32console import GetStdHandle, KEY_EVENT, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT
+    isWindows = True
+except ImportError as e:
+    import sys
+    import select
+    import termios
+
 #
 #============================================================
 #========= begin customization section          =============
@@ -55,6 +75,9 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 #========= in case of read fail use defaults    =============
 #============================================================
 #
+#============================================================
+# Load language specific variables with the default strings
+#============================================================
 def LoadDefaultLanguage():
 	global language
 	global str_lookahead
@@ -70,6 +93,8 @@ def LoadDefaultLanguage():
 	global str_on
 	global str_nodir
 	global str_wrongdir
+	global str_signal
+	global str_exit_msg
 	
 	language = 'en'
 	str_lookahead = 'Maximum number of events in preview: '
@@ -85,7 +110,13 @@ def LoadDefaultLanguage():
 	str_events = ' events ...'
 	str_nodir =  'does not exist or is not a directory'
 	str_wrongdir =  'is the wrong directory'
+	str_signal = 'Exiting after signal: '
+	str_exit_msg = 'The following keys terminate the program: '
 
+#
+#============================================================
+# Load variable with the default values
+#============================================================
 def LoadDefaults():
 	global status_output
 	global alert_sound
@@ -97,10 +128,12 @@ def LoadDefaults():
 	global number_events
 	global refresh_timer
 	global status_output
+	global str_exit_chars
 
 	LoadDefaultLanguage()
 	# operation system command to clear screen
 	status_output = True
+	str_exit_chars = 'xX'
 	str_divider = '==================================================================='
 	# StarTrek Transporter sound on startup - just for fun
 	str_initial_sound_file = 'transporter.mp3'
@@ -119,9 +152,17 @@ def LoadDefaults():
 	# decides whether we play a sound (loke gong etc.) before we speak the string
 	alert_sound = True	
 
+#
+#============================================================
+# Dummy class for exception
+#============================================================
 class LangNotFound(Exception):
 	pass
-	
+
+#
+#============================================================
+# Load preferences and localized strings from prefs.json
+#============================================================	
 def get_prefs(prefs_file):
 	global status_output
 	global alert_sound
@@ -146,7 +187,10 @@ def get_prefs(prefs_file):
 	global str_events
 	global str_on
 	global str_nodir
-	global str_wrongdir	
+	global str_wrongdir
+	global str_exit_chars	
+	global str_signal
+	global str_exit_msg
 
 	
 	try:
@@ -164,6 +208,7 @@ def get_prefs(prefs_file):
 					alert_sound = False
 				
 				language = prefs['language']
+				str_exit_chars = prefs['str_exit_chars']
 				str_divider = prefs['str_divider']
 				str_initial_sound_file = prefs['str_initial_sound_file']
 				str_alert_sound_file = prefs['str_alert_sound_file']
@@ -192,6 +237,8 @@ def get_prefs(prefs_file):
 						str_events = _locale['str_events']
 						str_nodir = _locale['str_nodir']
 						str_wrongdir = _locale['str_wrongdir']
+						str_signal = _locale['str_signal']
+						str_exit_msg = _locale['str_exit_msg']
 					
 				# if the prefs.json "language" entry is not matched by any of the translations
 				# fill default language entries 		
@@ -216,10 +263,79 @@ def get_prefs(prefs_file):
 #========= end customization section ========================
 #============================================================
 #
+#
+#============================================================
+# Non-blocking poll for keyboard input 
+#============================================================
+class KeyPoller():
+    def __enter__(self):
+        global isWindows
+        if isWindows:
+            self.readHandle = GetStdHandle(STD_INPUT_HANDLE)
+            self.readHandle.SetConsoleMode(ENABLE_LINE_INPUT|ENABLE_ECHO_INPUT|ENABLE_PROCESSED_INPUT)
+            self.curEventLength = 0
+            self.curKeysLength = 0
 
+            self.capturedChars = []
+        else:
+            # Save the terminal settings
+            self.fd = sys.stdin.fileno()
+            self.new_term = termios.tcgetattr(self.fd)
+            self.old_term = termios.tcgetattr(self.fd)
+
+            # New terminal setting unbuffered
+            self.new_term[3] = (self.new_term[3] & ~termios.ICANON & ~termios.ECHO)
+            termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.new_term)
+
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if isWindows:
+            pass
+        else:
+            termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
+
+    def poll(self):
+        if isWindows:
+            if not len(self.capturedChars) == 0:
+                return self.capturedChars.pop(0)
+
+            eventsPeek = self.readHandle.PeekConsoleInput(10000)
+
+            if len(eventsPeek) == 0:
+                return None
+
+            if not len(eventsPeek) == self.curEventLength:
+                for curEvent in eventsPeek[self.curEventLength:]:
+                    if curEvent.EventType == KEY_EVENT:
+                        if ord(curEvent.Char) == 0 or not curEvent.KeyDown:
+                            pass
+                        else:
+                            curChar = str(curEvent.Char)
+                            self.capturedChars.append(curChar)
+                self.curEventLength = len(eventsPeek)
+
+            if not len(self.capturedChars) == 0:
+                return self.capturedChars.pop(0)
+            else:
+                return None
+        else:
+            dr,dw,de = select.select([sys.stdin], [], [], 0)
+            if not dr == []:
+                return sys.stdin.read(1)
+            return None
+
+#
+#============================================================
+# Clear the console screen
+#============================================================
 def clearscreen():
 	os.system(str_clear)
 
+#
+#============================================================
+# Load events from Google Calendar
+#============================================================
 def get_events(number_events):
 	# code snippet from Google Developer website: https://developers.google.com/calendar/quickstart/python
 	# the website also includes instructions on how to set up the integration
@@ -256,8 +372,11 @@ def get_events(number_events):
     events = events_result.get('items', [])
     return (events)
 
-# function to supress output while playing mp3 files
+#
+#============================================================
+# Play mp3 files without console output
 # modified clone of original pydub code
+#============================================================
 def _play_with_ffplay_suppress(seg):
 	PLAYER = get_player_name()
 	# create temporary mp3 file for audio output since "with NamedTemporaryFile("w+b", suffix=".mp3") as f:"
@@ -268,7 +387,11 @@ def _play_with_ffplay_suppress(seg):
 			devnull = open(os.devnull, 'w')
 			subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull) 
 
-        
+#
+#============================================================
+# Convert text to speech and trigger audio output
+# with optional leading alert sound (gong etc)
+#============================================================        
 # text-to-speech output of a given character string
 def speak(speak_text,speak_lang,alert_sound):
 	# convert string to speech
@@ -285,6 +408,26 @@ def speak(speak_text,speak_lang,alert_sound):
 	_play_with_ffplay_suppress(music)
 
 
+#
+#============================================================
+# check console input and flag event if exit character was 
+# pressed - supposed to be invoked as thread
+#============================================================
+def check_keyboard_input(exit):
+	with KeyPoller() as keyPoller:
+		while not exit.is_set():
+			c = keyPoller.poll()
+			if not c is None:
+				if c in str_exit_chars:
+					# quit condition
+					exit.set()
+			exit.wait(0.5) 
+
+#
+#============================================================
+# main function with evaluation of input parameters
+# and main loop
+#============================================================
 def main(argv):
 	# operating system specific settings
 	global path_delim
@@ -302,6 +445,7 @@ def main(argv):
 	#just to have some strings in place
 	LoadDefaults()
 
+	# TODO: input parameters evauation as function
 	# if argument given we expect help as argument or the working directory as an option
 	if len(sys.argv) > 1:
 		try:
@@ -323,6 +467,7 @@ def main(argv):
 			print (filepath, str_wrongdir)
 			sys.exit(2)
 				
+	# load preferences from prefs.json
 	prefsfile = filepath+'.'+path_delim+'prefs.json'			
 	get_prefs(prefsfile)
 
@@ -333,10 +478,7 @@ def main(argv):
 	if status_output:
 		clearscreen()
 		music = AudioSegment.from_mp3(filepath+str_initial_sound_file)
-
 		threading.Thread(target=_play_with_ffplay_suppress, args=(music,)).start()
-		# code without threading:
-		#_play_with_ffplay_suppress(music)
 	#
 	events = get_events(number_events)
 	#reset counter 
@@ -345,10 +487,14 @@ def main(argv):
 
 	#
 	last = dateutil.parser.parse(datetime.datetime.now().isoformat())
-    
-  #endless loop, waiting for keyboard interrupt
-	while True:
-    # we need to be able to subtract the time stamps, hence we need to force both to the same format	
+
+  # start thread to 
+	threading.Thread(target=check_keyboard_input, args=(exit,)).start()
+	
+	# loop, waiting for keyboard interrupt or exit character pressed
+	while not exit.is_set():
+
+   	# we need to be able to subtract the time stamps, hence we need to force both to the same format	
 		now = dateutil.parser.parse(datetime.datetime.now().isoformat())
 
 		if status_output:
@@ -395,8 +541,10 @@ def main(argv):
 			print(str_divider)
 			print(str_iteration,' ',counter+1,'   ', str_stints, stints)
 			print(str_reloaded,' ', last.strftime("%H:%M:%S"),str_on,last.strftime("%d-%b-%Y"))
+			print(str_exit_msg, str_exit_chars)
 			
-		time.sleep(60)
+		# wait a minute or exit if event is set
+		exit.wait(60)
 		
 		# reload calendar every refresh_timer minutes  
 		counter = counter + 1  	
@@ -405,6 +553,20 @@ def main(argv):
 			counter = 0
 			stints = stints + 1
 			last = now  	
+
+#
+#============================================================
+# also quit on signal 
+#============================================================				
+def quit(signo, _frame):
+    print(str_signal, signo)
+    exit.set()    
     
 if __name__ == '__main__':
-    main(sys.argv[1:])
+	
+		
+	for sig in ('TERM', 'INT'):
+	#for sig in ('TERM', 'HUP', 'INT'): <=== SIGHUP is not defined in Windows
+		signal.signal(getattr(signal, 'SIG'+sig), quit);
+	
+	main(sys.argv[1:])
