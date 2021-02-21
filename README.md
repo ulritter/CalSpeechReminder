@@ -65,7 +65,7 @@ On Windows:
 - Download from the .exe files in `https://ffmpeg.org/download.html#build-windows`, (using one of the provided links for binary builds) and put them in a directory and add the directory to the PATH
 
 On MacOS
-- Easiest way is to install it via MacPorts (`sudo port install ffmpeg`) or Homebrew (`brew install ffmpeg`), provided you have either Homebrew or Macports installed. If not, you might want to give Homebrew a first shot since it is non-intrusive and does not requite sudo(`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`). Macports on the other hand can be found in `https://www.macports.org/install.php`. Please not that it is everyone's own responsibility what to install locally.
+- Easiest way is to install it via MacPorts (`sudo port install ffmpeg`) or Homebrew (`brew install ffmpeg`), provided you have either Homebrew or Macports installed. If not, you might want to give Homebrew a first shot since it is non-intrusive and does not require sudo(`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`). Macports on the other hand can be found in `https://www.macports.org/install.php`. Please not that it is everyone's own responsibility what to install locally.
 
 On Raspbian:
 - `sudo apt-get install ffmpeg`
