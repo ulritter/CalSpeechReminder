@@ -65,10 +65,10 @@ On Windows:
 - Download from the .exe filed https://ffmpeg.org/download.html#build-windows, put them in a directory and add the directory to the PATH
 
 On MacOS
-- Easiest way is to install it via MacPorts (sudo port install ffmpeg) or Homebrew (brew install ffmpeg)
+- Easiest way is to install it via MacPorts (`sudo port install ffmpeg`) or Homebrew (`brew install ffmpeg`)
 
 On Raspbian:
-- sudo apt-get install ffmpeg
+- `sudo apt-get install ffmpeg`
 
 
 
