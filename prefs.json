@@ -5,7 +5,7 @@
 	"str_alert_sound": "on",
   "str_alert_sound_file": "gong.mp3",
 	"str_tts_sound_file": "speech.mp3",
-	"str_exit_chars": "xXeE",
+	"str_exit_chars": "xXeEqQ",
 	"alerts": [
 		{"alert_time": "10"},
 		{"alert_time": "5"},
@@ -14,11 +14,11 @@
 	"number_events": "10",
 	"refresh_timer": "10",
 	
-	"language": "de",
+	"language": "de_DE",
 	
 	"locales": [
   	{
-    	"lang": "de",
+    	"lang": "de_DE",
     	"str_lookahead": "Maximale Anzahl der Ereignisse in der Vorschau: ",
     	"str_begins": "beginnt in",
     	"str_minutes": "Minuten",
@@ -33,10 +33,10 @@
     	"str_nodir": "existiert nicht oder ist kein Verzeichnis",
     	"str_wrongdir": " ist das falsche Verzeichnis",
     	"str_signal": "Signal empfangen, das Programm wird beendet: ",
-    	"str_exit_msg": "Folgende Tasten beenden das Programm: "
+    	"str_exit_msg": "Eine der folgende Tasten beendet das Programm: "
   	},
   	{
-    	"lang": "en",
+    	"lang": "en_US",
     	"str_lookahead": "Maximum number of events in preview: ",
     	"str_begins": "begins in",
     	"str_minutes": "minutes",
@@ -51,7 +51,7 @@
     	"str_nodir": " does not exist or is not a directory",
     	"str_wrongdir": " is the wrong directory",
     	"str_signal": "Exiting after signal: ",
-    	"str_exit_msg": "The following keys terminate the program: "
+    	"str_exit_msg": "One of the following keys terminates the program: "
   	}
 	]
 }

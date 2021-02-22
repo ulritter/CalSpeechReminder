@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
+# -*- coding: iso-8859-1 -*-
 #==========================================================
 # This script reads the content of a Google Calendar 
 # and gives meeting alerts by reading them via 
@@ -20,7 +20,6 @@
 # TODO: better screen output
 # TODO: run as a daemon
 # TODO: include logging
-# TODO: use official locale codes
 #
 from __future__ import print_function
 from pathlib import Path
@@ -31,6 +30,7 @@ import os.path
 import sys, getopt
 import urllib3
 import time
+import locale
 import threading
 from threading import Event
 import platform
@@ -97,7 +97,7 @@ def LoadDefaultLanguage():
 	global str_signal
 	global str_exit_msg
 	
-	language = 'en'
+	language = 'en_US'
 	str_lookahead = 'Maximum number of events in preview: '
 	str_begins = 'begins in'
 	str_minutes = 'minutes'
@@ -112,7 +112,7 @@ def LoadDefaultLanguage():
 	str_nodir =  'does not exist or is not a directory'
 	str_wrongdir =  'is the wrong directory'
 	str_signal = 'Exiting after signal: '
-	str_exit_msg = 'The following keys terminate the program: '
+	str_exit_msg = 'One of the following keys terminates the program: '
 
 #
 #============================================================
@@ -471,7 +471,7 @@ def main(argv):
 	# load preferences from prefs.json
 	prefsfile = filepath+'.'+path_delim+'prefs.json'			
 	get_prefs(prefsfile)
-
+	locale.setlocale(locale.LC_TIME, language)
 	# disable warnings we might get from text to speech module
 	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 	# 
@@ -538,7 +538,7 @@ def main(argv):
 			print(str_divider)
 			print(str_iteration,' ',counter+1,'   ', str_stints, stints)
 			# TODO: locale specific date output
-			print(str_reloaded,' ', last.strftime("%H:%M:%S"),str_on,last.strftime("%d-%b-%Y"))
+			print(str_reloaded,' ', last.strftime("%H:%M:%S %a, %d-%b-%Y"))
 			print(str_exit_msg, str_exit_chars)
 			
 		# wait a minute or exit if event is set
