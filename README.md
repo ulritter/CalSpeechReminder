@@ -7,9 +7,9 @@ This was originally built to run on a Raspberry Pi using Python 2.7 but can be e
 The scripts reads the **_prefs.json_** file to load preferences. The explanation of these preferences are here:
 
 	"status_output": if "on" the script turns verbose displaying console messages
-	"silence_file": 	required in special situations where the scripts runs on e.g. a Raspberry Pi which is connected via HDMI to a receiver
-										if this is not empty, the script will append this audio file at the beginning of the sound output to
-										allow some time for the channel switching delay which will cut some audio when starting to play
+	"silence_file": required in special situations where the scripts runs on e.g. a Raspberry Pi which is connected via HDMI to a receiver
+		if this is not empty, the script will append this audio file at the beginning of the sound output to
+		allow some time for the channel switching delay which will cut some audio when starting to play
 	"str_divider": line in ascii to have a visual speration of data
 	"str_initial_sound_file": sound file played on startup
 	"str_alert_sound": if "on" the sound in the "str_alert_sound_file" below is played before the calender text-to-speech output
