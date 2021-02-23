@@ -12,6 +12,7 @@ The scripts reads the **_prefs.json_** file to load preferences. The explanation
 	"str_alert_sound": if "on" the sound in the "str_alert_sound_file" below is played before the calender text-to-speech output
 	"str_alert_sound_file": sound file played on alert if "str_alert_sound" above in "on"
 	"str_tts_sound_file": temp soundfile where the text-to-speech conversion result is stored
+	"str_play_sound_file": temp soundfile for mp3 play
 	"str_exit_chars": string of characters which will cause the script to terminate, e.g. "xXeE"
 	"number_events": number of calendar entries to be read head 
 	"refresh_timer": how often (minutes) 
@@ -69,6 +70,8 @@ On Windows:
 
 On MacOS
 - Easiest way is to install it via MacPorts (`sudo port install ffmpeg`) or Homebrew (`brew install ffmpeg`), provided you have either Homebrew or Macports installed. If not, you might want to give Homebrew a first shot since it is non-intrusive and does not require sudo (`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`). Macports on the other hand can be found in `https://www.macports.org/install.php`. Please not that it is everyone's own responsibility what to install locally.
+
+brew install portaudio
 
 On Raspbian:
 - `sudo apt-get install ffmpeg`

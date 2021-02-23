@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 #==========================================================
 # This script reads the content of a Google Calendar 
 # and gives meeting alerts by reading them via 
@@ -20,6 +20,9 @@
 # TODO: better screen output
 # TODO: run as a daemon
 # TODO: include logging
+# TODO: pythonize comments
+# TODO: move global variables to classes
+# TODO: reload prefs file
 #
 from __future__ import print_function
 from pathlib import Path
@@ -120,11 +123,13 @@ def LoadDefaultLanguage():
 #============================================================
 def LoadDefaults():
 	global status_output
+	global silence_file
 	global alert_sound
 	global str_divider
 	global str_initial_sound_file
 	global str_alert_sound_file
 	global str_tts_sound_file
+	global str_play_sound_file
 	global alerts
 	global number_events
 	global refresh_timer
@@ -134,14 +139,16 @@ def LoadDefaults():
 	LoadDefaultLanguage()
 	# operation system command to clear screen
 	status_output = True
-	str_exit_chars = 'xX'
+	silence_file = ''
+	str_exit_chars = 'xXqQ'
 	str_divider = '==================================================================='
 	# StarTrek Transporter sound on startup - just for fun
 	str_initial_sound_file = 'transporter.mp3'
 	#theater gong :-)
 	str_alert_sound_file = 'gong.mp3'
 	# temp file for generated tts sound
-	str_tts_sound_file = 'speech.mp3'
+	str_tts_sound_file = '_stmp.mp3'
+	str_play_sound_file = '_tmp.mp3'
 	# countdown delta minutes to trigger alert messages
 	alerts = [1,5,10]
 	# get next n google calendar events beginning from now
@@ -171,6 +178,7 @@ def get_prefs(prefs_file):
 	global str_initial_sound_file
 	global str_alert_sound_file
 	global str_tts_sound_file
+	global str_play_sound_file
 	global alerts
 	global number_events
 	global refresh_timer
@@ -192,7 +200,7 @@ def get_prefs(prefs_file):
 	global str_exit_chars	
 	global str_signal
 	global str_exit_msg
-
+	global silence_file
 	
 	try:
 		with open(prefs_file) as f:
@@ -207,13 +215,14 @@ def get_prefs(prefs_file):
 					alert_sound = True
 				else:
 					alert_sound = False
-				
+				silence_file = prefs['silence_file']
 				language = prefs['language']
 				str_exit_chars = prefs['str_exit_chars']
 				str_divider = prefs['str_divider']
 				str_initial_sound_file = prefs['str_initial_sound_file']
 				str_alert_sound_file = prefs['str_alert_sound_file']
 				str_tts_sound_file = prefs['str_tts_sound_file']
+				str_play_sound_file = prefs['str_play_sound_file']
 				number_events = int(prefs['number_events'])
 				refresh_timer = int(prefs['refresh_timer'])
 			
@@ -372,18 +381,18 @@ def get_events(number_events):
                                         orderBy='startTime').execute()
     events = events_result.get('items', [])
     return (events)
-
 #
 #============================================================
 # Play mp3 files without console output
 # modified clone of original pydub code
 #============================================================
+
 def _play_with_ffplay_suppress(seg):
 	PLAYER = get_player_name()
 	# create temporary mp3 file for audio output since "with NamedTemporaryFile("w+b", suffix=".mp3") as f:"
 	# as used in original pydub code comes up with double back slash errors in Windows
 	if os.path.exists(filepath+'.'+path_delim):
-		with open(filepath+'.'+path_delim+'tmp.mp3', 'wb') as f:
+		with open(filepath+'.'+path_delim+str_play_sound_file, 'wb') as f:
 			seg.export(f.name, "mp3")
 			devnull = open(os.devnull, 'w')
 			subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull) 
@@ -396,10 +405,17 @@ def _play_with_ffplay_suppress(seg):
 # text-to-speech output of a given character string
 def speak(speak_text,speak_lang,alert_sound):
 	# convert string to speech
+	
 	tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
 	tts.save(filepath+str_tts_sound_file)
 	# build output sound file
 	music = AudioSegment.empty()
+	
+	# add silence to the beginning, might be needed in same scenarios with sound output via HDMI
+	# controlled by "silence_file" entry in prefs.json
+	if os.path.isfile(filepath+silence_file):
+		music += AudioSegment.from_mp3(filepath+silence_file)
+		
 	if alert_sound:
 		# if there is a gong or alike (prefs.json) defined then add the sound to the output
 		music += AudioSegment.from_mp3(filepath+str_alert_sound_file)
@@ -421,7 +437,7 @@ def check_keyboard_input(exit):
 			if not c is None:
 				if c in str_exit_chars:
 					# quit condition
-					exit.set()
+					wrapup_and_quit()
 			exit.wait(0.5) 
 
 #
@@ -449,8 +465,9 @@ def main(argv):
 	# TODO: input parameters evauation as function
 	# if argument given we expect help as argument or the working directory as an option
 	if len(sys.argv) > 1:
+		# TODO: Better help texts
 		try:
-			opts, args = getopt.getopt(argv,"hd:",["dir="])
+			opts, args = getopt.getopt(argv,"hd:",["help","dir="])
 		except getopt.GetoptError:
 			print ('Usage: ', str(sys.argv[0]), '-d <base directory> ')
 			sys.exit(2)
@@ -471,14 +488,21 @@ def main(argv):
 	# load preferences from prefs.json
 	prefsfile = filepath+'.'+path_delim+'prefs.json'			
 	get_prefs(prefsfile)
-	locale.setlocale(locale.LC_TIME, language)
+	print('language = ', language)
+	locale.setlocale(locale.LC_TIME, language+'.utf-8')
 	# disable warnings we might get from text to speech module
 	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 	# 
 	#
 	if status_output:
 		clearscreen()
-		music = AudioSegment.from_mp3(filepath+str_initial_sound_file)
+		music = AudioSegment.empty()
+	
+		# add silence to the beginning, might be needed in same scenarios with sound output via HDMI
+		if os.path.isfile(filepath+silence_file):
+			music += AudioSegment.from_mp3(filepath+silence_file)
+			
+		music += AudioSegment.from_mp3(filepath+str_initial_sound_file)
 		threading.Thread(target=_play_with_ffplay_suppress, args=(music,)).start()
 	#
 	events = get_events(number_events)
@@ -530,14 +554,16 @@ def main(argv):
 			for alert_time in alerts:
 				if timeDiff == alert_time:
 					if timeDiff == 1:
-						threading.Thread(target=speak, args=(summary + str_begins + str_one_minute,language,alert_sound)).start()
+						#"language" is a 5 character locale string like "en_US". Text-to-speech only needs e.g."en", so we do 
+						# language[:2] to get the firsdt two characters
+						threading.Thread(target=speak, args=(summary + str_begins + str_one_minute,language[:2],alert_sound)).start()
 					else:
-						threading.Thread(target=speak, args=(summary + str_begins + str(timeDiff) + str_minutes,language,alert_sound)).start()
+						threading.Thread(target=speak, args=(summary + str_begins + str(timeDiff) + str_minutes,language[:2],alert_sound)).start()
 
 		if status_output:
 			print(str_divider)
 			print(str_iteration,' ',counter+1,'   ', str_stints, stints)
-			# TODO: locale specific date output
+
 			print(str_reloaded,' ', last.strftime("%H:%M:%S %a, %d-%b-%Y"))
 			print(str_exit_msg, str_exit_chars)
 			
@@ -551,20 +577,30 @@ def main(argv):
 			counter = 0
 			stints = stints + 1
 			last = now  	
-
 #
 #============================================================
 # also quit on signal 
 #============================================================				
-def quit(signo, _frame):
-    print(str_signal, signo)
-    exit.set()    
+def wrapup_and_quit():
+	if Path(filepath+path_delim+str_tts_sound_file).exists():
+		os.remove(filepath+path_delim+str_tts_sound_file)
+	if Path(filepath+path_delim+str_play_sound_file).exists():
+		os.remove(filepath+path_delim+str_play_sound_file)
+	exit.set()    
+#
+#============================================================
+# also quit on signal 
+#============================================================				
+def leave_on_signal(signo, _frame):
+	print(str_signal, signo)
+	# TODO: close & delete tmp files
+	wrapup_and_quit()   
     
 if __name__ == '__main__':
 	
 		
 	for sig in ('TERM', 'INT'):
 	#for sig in ('TERM', 'HUP', 'INT'): <=== SIGHUP is not defined in Windows
-		signal.signal(getattr(signal, 'SIG'+sig), quit);
+		signal.signal(getattr(signal, 'SIG'+sig), leave_on_signal);
 	
 	main(sys.argv[1:])
