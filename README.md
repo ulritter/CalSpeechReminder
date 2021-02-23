@@ -7,6 +7,9 @@ This was originally built to run on a Raspberry Pi using Python 2.7 but can be e
 The scripts reads the **_prefs.json_** file to load preferences. The explanation of these preferences are here:
 
 	"status_output": if "on" the script turns verbose displaying console messages
+	"silence_file": 	required in special situations where the scripts runs on e.g. a Raspberry Pi which is connected via HDMI to a receiver
+										if this is not empty, the script will append this audio file at the beginning of the sound output to
+										allow some time for the channel switching delay which will cut some audio when starting to play
 	"str_divider": line in ascii to have a visual speration of data
 	"str_initial_sound_file": sound file played on startup
 	"str_alert_sound": if "on" the sound in the "str_alert_sound_file" below is played before the calender text-to-speech output
@@ -71,12 +74,8 @@ On Windows:
 On MacOS
 - Easiest way is to install it via MacPorts (`sudo port install ffmpeg`) or Homebrew (`brew install ffmpeg`), provided you have either Homebrew or Macports installed. If not, you might want to give Homebrew a first shot since it is non-intrusive and does not require sudo (`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`). Macports on the other hand can be found in `https://www.macports.org/install.php`. Please not that it is everyone's own responsibility what to install locally.
 
-brew install portaudio
-
 On Raspbian:
 - `sudo apt-get install ffmpeg`
-
-
 
 The CalSpeechReminder.py script can be called without parameters. In this case it expects to be invoked from within its base directory. If it is being invoked from outside its base directory (e.g. via desktop icon) the absolute or relative path to the base directory (where sound files and the prefs.json preference file are expected) can be given via command line parameter.
 
