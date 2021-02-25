@@ -593,3 +593,4 @@ if __name__ == '__main__':
         signal.signal(getattr(signal, 'SIG'+sig), leave_on_signal);
     
     main(sys.argv[1:])
+

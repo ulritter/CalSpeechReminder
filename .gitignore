@@ -5,3 +5,5 @@ say.py
 tmp.mp3
 speech.mp3
 credentials.json
+_*.mp3
+CalSpeechReminderObj.py
