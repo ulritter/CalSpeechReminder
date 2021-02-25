@@ -2,7 +2,7 @@
 
 ### This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
 
-This was originally built to run on a Raspberry Pi using Python 2.7 but can be equally run on either MacOs or Windows. The script is supposed to adapt automatically. I have tested it with Python 2.7 on Raspian, with Python 3.6.4 on MacOs Mojave, and with Python 3.9.1 on Windows 10.
+This was originally built to run on a Raspberry Pi using Python 2.7 but can be equally run on either MacOs or Windows. The script is supposed to adapt automatically. I have tested it with Python 2.7 on Raspbian, with Python 3.6.4 on MacOs Mojave, and with Python 3.9.1 on Windows 10.
 
 The scripts reads the **_prefs.json_** file to load preferences. The explanation of these preferences are here:
 
@@ -10,6 +10,7 @@ The scripts reads the **_prefs.json_** file to load preferences. The explanation
 	"silence_file": required in special situations where the scripts runs on e.g. a Raspberry Pi which is connected via HDMI to a receiver
 		if this is not empty, the script will append this audio file at the beginning of the sound output to
 		allow some time for the channel switching delay which will cut some audio when starting to play
+		The silence files are taken from: https://github.com/anars/blank-audio, Kudos & thanks @anars
 	"str_divider": line in ascii to have a visual speration of data
 	"str_initial_sound_file": sound file played on startup
 	"str_alert_sound": if "on" the sound in the "str_alert_sound_file" below is played before the calender text-to-speech output
