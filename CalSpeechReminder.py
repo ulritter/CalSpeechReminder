@@ -566,8 +566,12 @@ def main(argv):
 #============================================================             
 def wrapup_and_quit():
     """remove temp files and set exit flag"""
+    global filepath
+    if filepath == '':
+        filepath = '.'
     if Path(filepath+path_delim+str_tts_sound_file).exists():
         os.remove(filepath+path_delim+str_tts_sound_file)
+
     if Path(filepath+path_delim+str_play_sound_file).exists():
         os.remove(filepath+path_delim+str_play_sound_file)
     exit.set()     
