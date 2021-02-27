@@ -16,7 +16,6 @@
 # (c) ulritter, 2021, GPL License 3.0
 #==========================================================
 #
-# TODO: sound subdirectory
 # TODO: better screen output
 # TODO: run as a daemon
 # TODO: include logging
@@ -325,19 +324,17 @@ class key_poller():
 
 #
 #============================================================
-# Clear the console screen
-#============================================================
 def clear_screen():
+    """Clear the console screen"""
     os.system(str_clear)
 
 #
 #============================================================
-# Load events from Google Calendar
-#============================================================
 def get_events(number_events):
-    # code snippet from Google Developer website: https://developers.google.com/calendar/quickstart/python
-    # the website also includes instructions on how to set up the integration
-        """Shows basic usage of the Google Calendar API.
+        """Load events from Google Calendar
+        code snippet from Google Developer website: https://developers.google.com/calendar/quickstart/python
+        the website also includes instructions on how to set up the integration
+        Shows basic usage of the Google Calendar API.
         Prints the start and name of the next 10 events on the user's calendar.
         """
         creds = None
@@ -457,7 +454,6 @@ def main(argv):
     # TODO: input parameters evauation as function
     # if argument given we expect help as argument or the working directory as an option
     if len(sys.argv) > 1:
-        # TODO: Better help texts
         try:
             opts, args = getopt.getopt(argv, "hd:", ["help", "dir="])
         except getopt.GetoptError:
@@ -471,7 +467,7 @@ def main(argv):
                 filepath = arg+path_delim
         
         if not Path(filepath).is_dir():
-            print (filepath, str_nodir)
+            print(filepath, str_nodir)
             sys.exit(2)
         elif not Path(filepath+path_delim+'prefs.json').is_file():
             print (filepath, str_wrongdir)
@@ -485,12 +481,12 @@ def main(argv):
     # disable warnings we might get from text to speech module
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     # 
-    #
+    # startup sound
     if status_output:
         clear_screen()
         music = AudioSegment.empty()
     
-        # add silence to the beginning, might be needed in same scenarios with sound output via HDMI
+        # add silence to the beginning, might be necessary in same scenarios with sound output via HDMI or Bluetooth where sync time is needed
         if os.path.isfile(filepath+silence_file):
             music += AudioSegment.from_mp3(filepath+silence_file)
             
@@ -547,16 +543,16 @@ def main(argv):
                 if timeDiff == alert_time:
                     if timeDiff == 1:
                         #"language" is a 5 character locale string like "en_US". Text-to-speech only needs e.g."en", so we do 
-                        # language[:2] to get the firsdt two characters
+                        # language[:2] to get the first two characters
                         threading.Thread(target=speak_string, args=(summary + str_begins + str_one_minute, language[:2], alert_sound)).start()
                     else:
                         threading.Thread(target=speak_string, args=(summary + str_begins + str(timeDiff) + str_minutes, language[:2], alert_sound)).start()
 
         if status_output:
             print(str_divider)
-            print(str_iteration,' ',counter+1,'     ', str_stints, stints)
+            print(str_iteration, ' ', counter+1, '     ', str_stints, stints)
 
-            print(str_reloaded,' ', last.strftime("%H:%M:%S %a, %d-%b-%Y"))
+            print(str_reloaded, ' ', last.strftime("%H:%M:%S %a, %d-%b-%Y"))
             print(str_exit_msg, str_exit_chars)
             
         # wait a minute or exit if event is set
