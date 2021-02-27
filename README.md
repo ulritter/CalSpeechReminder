@@ -1,4 +1,4 @@
-# Speech Output for Google calendar
+#Automated Alert and Speech Output System based on Google Calendar
 
 ### This little script reads the content of a Google Calendar and gives meeting alerts by reading the meeting subjects via text-to-speech.
 

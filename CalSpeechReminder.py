@@ -1,4 +1,4 @@
-#!/usr/bin/python
+##!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #==========================================================
 # This script reads the content of a Google Calendar 
@@ -79,7 +79,7 @@ except ImportError as e:
 #============================================================
 
 #============================================================
-def LoadDefaultLanguage():
+def load_default_language():
     """Populate language specific variables with the default strings"""
     global language
     global str_lookahead
@@ -117,7 +117,7 @@ def LoadDefaultLanguage():
 
 #
 #============================================================
-def LoadDefaults():
+def load_defaults():
     """Populate variable with the default values"""
     global status_output
     global silence_file
@@ -133,7 +133,7 @@ def LoadDefaults():
     global status_output
     global str_exit_chars
 
-    LoadDefaultLanguage()
+    load_default_language()
     # operation system command to clear screen
     status_output = True
     silence_file = ''
@@ -194,35 +194,35 @@ def get_prefs(prefs_file):
     try:
         with open(prefs_file) as f:
             try:
-                prefs = json.load(f)
-                if prefs['status_output'] == 'on':
+                _prefs = json.load(f)
+                if _prefs['status_output'] == 'on':
                     status_output = True
                 else:
                     status_output = False
                 
-                if prefs['str_alert_sound'] == 'on':
+                if _prefs['str_alert_sound'] == 'on':
                     alert_sound = True
                 else:
                     alert_sound = False
-                silence_file = prefs['silence_file']
-                language = prefs['language']
-                str_exit_chars = prefs['str_exit_chars']
-                str_divider = prefs['str_divider']
-                str_initial_sound_file = prefs['str_initial_sound_file']
-                str_alert_sound_file = prefs['str_alert_sound_file']
-                str_tts_sound_file = prefs['str_tts_sound_file']
-                str_play_sound_file = prefs['str_play_sound_file']
-                number_events = int(prefs['number_events'])
-                refresh_timer = int(prefs['refresh_timer'])
+                silence_file = _prefs['silence_file']
+                language = _prefs['language']
+                str_exit_chars = _prefs['str_exit_chars']
+                str_divider = _prefs['str_divider']
+                str_initial_sound_file = _prefs['str_initial_sound_file']
+                str_alert_sound_file = _prefs['str_alert_sound_file']
+                str_tts_sound_file = _prefs['str_tts_sound_file']
+                str_play_sound_file = _prefs['str_play_sound_file']
+                number_events = int(_prefs['number_events'])
+                refresh_timer = int(_prefs['refresh_timer'])
             
                 alerts=[]
-                for alert in prefs['alerts']:
+                for alert in _prefs['alerts']:
                     alerts.append(int(alert['alert_time']))
                 
-                language_found = False
-                for _locale in prefs['locales']:
+                _language_found = False
+                for _locale in _prefs['locales']:
                     if _locale['lang'] == language:
-                        language_found = True
+                        _language_found = True
                         str_lookahead = _locale['str_lookahead']
                         str_begins = _locale['str_begins']
                         str_minutes = _locale['str_minutes']
@@ -241,21 +241,21 @@ def get_prefs(prefs_file):
                     
                 # if the prefs.json "language" entry is not matched by any of the translations
                 # fill default language entries         
-                if not language_found:
+                if not _language_found:
                     print('Language ', language,' not found. Still starting, but with defaults ...')
                     time.sleep(5)
-                    LoadDefaultLanguage()
+                    load_default_language()
                 
             # fill defaults in case of any json parsing issue (delimiter missing, etc)            
             except (ValueError, KeyError) as jerr:
                 print('Value or Key Error: Please check prefs file. Still starting, but with defaults ...:', jerr)
                 time.sleep(5)
-                LoadDefaults()
+                load_defaults()
                 
     except (EnvironmentError) as jerr:
         print('Environment error. Please check prefs file. Still starting, but with defaults ...:', jerr)
         time.sleep(5)
-        LoadDefaults()
+        load_defaults()
     
 #
 #============================================================
@@ -264,7 +264,7 @@ def get_prefs(prefs_file):
 #
 
 #============================================================
-class KeyPoller():
+class key_poller():
     """Non-blocking poll for key strokes in either Windows of Linux environments"""
     def __enter__(self):
         global isWindows
@@ -327,7 +327,7 @@ class KeyPoller():
 #============================================================
 # Clear the console screen
 #============================================================
-def clearscreen():
+def clear_screen():
     os.system(str_clear)
 
 #
@@ -383,31 +383,31 @@ def _play_with_ffplay_suppress(seg):
         with open(filepath+'.'+path_delim+str_play_sound_file, 'wb') as f:
             seg.export(f.name, "mp3")
             devnull = open(os.devnull, 'w')
-            subprocess.call([PLAYER,"-nodisp", "-autoexit", "-hide_banner", f.name],stdout=devnull, stderr=devnull) 
+            subprocess.call([PLAYER, "-nodisp", "-autoexit", "-hide_banner", f.name], stdout=devnull, stderr=devnull)
 
 #
 #============================================================                
-def speak(speak_text,speak_lang,alert_sound):
+def speak_string(speak_text, speak_lang, alert_sound):
     """ Convert text to speech and trigger audio output
     with optional leading alert sound (gong etc)"""
     
-    tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
-    tts.save(filepath+str_tts_sound_file)
+    _tts = gTTS(text = speak_text, lang = speak_lang, slow = False)
+    _tts.save(filepath+str_tts_sound_file)
     # build output sound file
-    music = AudioSegment.empty()
-    
+    _sound_segment = AudioSegment.empty()
+
     # add silence to the beginning, might be needed in same scenarios with sound output via HDMI
     # controlled by "silence_file" entry in prefs.json
     if os.path.isfile(filepath+silence_file):
-        music += AudioSegment.from_mp3(filepath+silence_file)
+        _sound_segment += AudioSegment.from_mp3(filepath+silence_file)
         
     if alert_sound:
         # if there is a gong or alike (prefs.json) defined then add the sound to the output
-        music += AudioSegment.from_mp3(filepath+str_alert_sound_file)
+        _sound_segment += AudioSegment.from_mp3(filepath+str_alert_sound_file)
     # add converted string    
-    music += AudioSegment.from_mp3(filepath+str_tts_sound_file)
+    _sound_segment += AudioSegment.from_mp3(filepath+str_tts_sound_file)
     # crank it out ...
-    _play_with_ffplay_suppress(music)
+    _play_with_ffplay_suppress(_sound_segment)
 
 
 #
@@ -415,15 +415,23 @@ def speak(speak_text,speak_lang,alert_sound):
 def check_keyboard_input(exit):
     """check console input and flag event if exit character was 
     pressed - supposed to be invoked as thread"""
-    with KeyPoller() as keyPoller:
+    with key_poller() as _keyPoller:
         while not exit.is_set():
-            c = keyPoller.poll()
-            if not c is None:
-                if c in str_exit_chars:
+            _c = _keyPoller.poll()
+            if not _c is None:
+                if _c in str_exit_chars:
                     # quit condition
                     wrapup_and_quit()
-            exit.wait(0.5) 
+            exit.wait(0.5)
 
+#
+#============================================================
+def print_usage():
+    """Print Usage message"""
+    print('Usage:')
+    print(os.path.basename(str(sys.argv[0])), ' or')
+    print(os.path.basename(str(sys.argv[0])), '[-h|--help] or ')
+    print(os.path.basename(str(sys.argv[0])), '[[-d|--dir <base directory>]')
 #
 #============================================================
 def main(argv):
@@ -444,20 +452,20 @@ def main(argv):
     filepath = ''
     
     #just to have some strings in place
-    LoadDefaults()
+    load_defaults()
 
     # TODO: input parameters evauation as function
     # if argument given we expect help as argument or the working directory as an option
     if len(sys.argv) > 1:
         # TODO: Better help texts
         try:
-            opts, args = getopt.getopt(argv,"hd:",["help","dir="])
+            opts, args = getopt.getopt(argv, "hd:", ["help", "dir="])
         except getopt.GetoptError:
-            print ('Usage: ', str(sys.argv[0]), '-d <base directory> ')
+            print_usage()
             sys.exit(2)
         for opt, arg in opts:
             if opt in ("-h", "--help"):
-                print (os.path.basename(str(sys.argv[0])),'-d <base directory>')
+                print_usage()
                 sys.exit()
             elif opt in ("-d", "--dir"):
                 filepath = arg+path_delim
@@ -479,7 +487,7 @@ def main(argv):
     # 
     #
     if status_output:
-        clearscreen()
+        clear_screen()
         music = AudioSegment.empty()
     
         # add silence to the beginning, might be needed in same scenarios with sound output via HDMI
@@ -490,7 +498,7 @@ def main(argv):
         threading.Thread(target=_play_with_ffplay_suppress, args=(music,)).start()
     #
     events = get_events(number_events)
-    #reset counter 
+
     counter = 0
     stints = 1
 
@@ -507,7 +515,7 @@ def main(argv):
         now = dateutil.parser.parse(datetime.datetime.now().isoformat())
 
         if status_output:
-            clearscreen()
+            clear_screen()
             print(str_lookahead, number_events)
             print(str_divider)
             if not events :
@@ -540,9 +548,9 @@ def main(argv):
                     if timeDiff == 1:
                         #"language" is a 5 character locale string like "en_US". Text-to-speech only needs e.g."en", so we do 
                         # language[:2] to get the firsdt two characters
-                        threading.Thread(target=speak, args=(summary + str_begins + str_one_minute,language[:2],alert_sound)).start()
+                        threading.Thread(target=speak_string, args=(summary + str_begins + str_one_minute, language[:2], alert_sound)).start()
                     else:
-                        threading.Thread(target=speak, args=(summary + str_begins + str(timeDiff) + str_minutes,language[:2],alert_sound)).start()
+                        threading.Thread(target=speak_string, args=(summary + str_begins + str(timeDiff) + str_minutes, language[:2], alert_sound)).start()
 
         if status_output:
             print(str_divider)
